@@ -17,6 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.FrameLayout;
+import com.eyedog.aftereffect.DashLine.ConstantLineChecker;
 import com.eyedog.aftereffect.DashLine.DashLineView;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,9 +72,7 @@ public class ControllableContainer extends FrameLayout {
     private OnGestureListener mGestureListener;
 
     private boolean enableLongClickFlag = false;
-    private boolean mHasDashLine;
-    private float mDashRotation;
-    RotateChecker mRotateChecher;
+
     Runnable longClickRunnable = new Runnable() {
         @Override
         public void run() {
@@ -98,7 +97,6 @@ public class ControllableContainer extends FrameLayout {
 
     private void init() {
         touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
-        mRotateChecher = new RotateChecker();
     }
 
     public void setExtendEventView(View extendEventView) {
@@ -206,7 +204,7 @@ public class ControllableContainer extends FrameLayout {
                         //计算本次向量和上一次向量之间的夹角
                         float rotateDelta = calculateDeltaDegree(mLastVector, vector);
                         float rotation = target.getRotation();
-                        rotateDelta = mRotateChecher.checkDash(rotateDelta, rotation);
+                        rotateDelta = RotateChecker.checkDash(rotateDelta, rotation);
                         float r = ((rotation % 360 + 360) % 360);
                         if (mDashLineView != null && rotateDelta == 0) {
                             if ((r > 360 - 45 || r <= 0 + 45) || (r > 180 - 45 && r <= 180 + 45)) {
@@ -240,6 +238,30 @@ public class ControllableContainer extends FrameLayout {
                         //平移操作
                         float offX = dx;
                         float offY = dy;
+                        if (mDashLineView != null) {
+                            float centerX =
+                                target.getTranslationX() + target.getMeasuredWidth() / 2.0F;
+                            float constantX = mMeasureWidth / 2.0F;
+                            offX = ConstantLineChecker.checkConstant(centerX, constantX, dx);
+                            if (offX != dx) {
+                                DashLineView.DashDrawEntity verticalEntity =
+                                    new DashLineView.DashDrawEntity(
+                                        DashLineView.DashDrawEntity.TYPE_VERTICAL,
+                                        (int) constantX);
+                                mDashLineView.drawDashLine(verticalEntity);
+                            }
+                            float centerY =
+                                target.getTranslationY() + target.getMeasuredHeight() / 2.0f;
+                            float constantY = mMeasureHeight / 2.0f;
+                            offY = ConstantLineChecker.checkConstant(centerY, constantY, dy);
+                            if (offY != dy) {
+                                DashLineView.DashDrawEntity horizontalEntity =
+                                    new DashLineView.DashDrawEntity(
+                                        DashLineView.DashDrawEntity.TYPE_HORIZONTAL,
+                                        (int) constantY);
+                                mDashLineView.drawDashLine(horizontalEntity);
+                            }
+                        }
                         translation(target, offX, offY);
                         mLastSinglePoint.set(event.getRawX(), event.getRawY());
                     }
@@ -297,9 +319,6 @@ public class ControllableContainer extends FrameLayout {
             case MotionEvent.ACTION_CANCEL:
             case MotionEvent.ACTION_UP:
                 isTouchUp = true;
-                if (mRotateChecher != null) {
-                    mRotateChecher.clearOffset();
-                }
                 if (target == null) {
                     if (mIsDragging && mGestureListener != null && !mMultiTouch) {
                         mGestureListener.onDragEnd();

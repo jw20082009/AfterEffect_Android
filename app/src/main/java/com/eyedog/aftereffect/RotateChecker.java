@@ -7,23 +7,19 @@ import android.util.Log;
  **/
 public class RotateChecker {
 
-    private final String TAG = "RotateChecker";
-    final float offset = 8;//必须小于90度
-    private float currentOffset = 0;
+    private static final String TAG = "RotateChecker";
+    static final float offset = 8;//必须小于90度
+    private static float currentOffset = 0;
 
-    private float[] getStandardValues() {
+    public static float[] getStandardValues() {
         return new float[] { 0, 90, 180, 270 };
     }
 
-    public void clearOffset() {
-        currentOffset = 0;
-    }
-
-    private int rotation(int rotation) {
+    private static int rotation(int rotation) {
         return (rotation % 360 + 360) % 360;
     }
 
-    public float checkDash(float delta, float rotation) {
+    public static float checkDash(float delta, float rotation) {
         float[] standardValues = getStandardValues();
         int r = rotation((int) rotation);
         float result = 0f;
