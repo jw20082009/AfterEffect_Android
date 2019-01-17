@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context=".SvgaActivity"
+    >
+    <com.opensource.svgaplayer.SVGAImageView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:background="#555"
+        app:autoPlay="true"
+        app:source="loading_snap_old.svga"
+        />
+    <com.opensource.svgaplayer.SVGAImageView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:background="#555"
+        app:autoPlay="true"
+        app:source="loading_snap.svga"
+        />
+    <com.opensource.svgaplayer.SVGAImageView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:background="#555"
+        app:autoPlay="true"
+        app:source="loading_echo.svga"
+        />
+    <com.opensource.svgaplayer.SVGAImageView
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:background="#555"
+        app:autoPlay="true"
+        app:source="looop_snap.svga"
+        />
+
+    <com.eyedog.aftereffect.HomeLogoImageView
+        android:id="@+id/logo_progress"
+        android:layout_width="60dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginTop="10dp"
+        android:background="#555"
+        android:layerType="software"
+        app:autoPlay="true"
+        app:source="loading_echo.svga"
+        />
+
+</LinearLayout>

@@ -1,33 +1,39 @@
 package com.eyedog.aftereffect;
 
-import android.graphics.Color;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.TextView;
-import com.eyedog.aftereffect.DashLine.DashLineView;
+import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    ControllableContainer mContainer;
-    DashLineView mDashLineView;
+    Button btnController, btnSvga;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mContainer = findViewById(R.id.container);
-        mDashLineView = findViewById(R.id.dashline_view);
+        btnController = findViewById(R.id.btn_controller);
+        btnSvga = findViewById(R.id.btn_svga);
+        btnController.setOnClickListener(this);
+        btnSvga.setOnClickListener(this);
     }
 
-    public void addText(View view) {
-        TestTextView textView = new TestTextView(this);
-        textView.setLayoutParams(new FrameLayout.LayoutParams(300, 200));
-        textView.setText("test");
-        textView.setTextSize(12);
-        textView.setBackgroundColor(Color.parseColor("#99ff0000"));
-        mContainer.addView(textView);
-        mContainer.setDashLineView(mDashLineView);
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_controller:
+                startActivity(ControllerActivity.class);
+                break;
+            case R.id.btn_svga:
+                startActivity(SvgaActivity.class);
+                break;
+        }
+    }
+
+    private void startActivity(Class<?> clazz) {
+        Intent intent = new Intent(this, clazz);
+        startActivity(intent);
     }
 }
