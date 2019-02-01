@@ -1,11 +1,22 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/AlphaAnimation</item>
+    </style>
+
+    <style name="AlphaAnimation" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/activity_alpha_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/activity_alpha_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/activity_alpha_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/activity_alpha_out</item>
+        <item name="android:taskOpenEnterAnimation">@anim/activity_alpha_in</item>
+        <item name="android:taskOpenExitAnimation">@anim/activity_alpha_out</item>
+        <item name="android:taskCloseEnterAnimation">@anim/activity_alpha_in</item>
+        <item name="android:taskCloseExitAnimation">@anim/activity_alpha_out</item>
     </style>
 
 </resources>

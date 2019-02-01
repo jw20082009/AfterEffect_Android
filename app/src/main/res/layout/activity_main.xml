@@ -1,26 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/background_dark"
     >
-    <LinearLayout
+
+    <com.eyedog.aftereffect.camera.CameraView
+        android:id="@+id/camera_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        >
-        <Button
-            android:id="@+id/btn_controller"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="controller activity"
-            />
+        />
 
-        <Button
-            android:id="@+id/btn_svga"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="svga animation"
-            />
-    </LinearLayout>
-</ScrollView>
+    <com.eyedog.widgets.RecordButton
+        android:id="@+id/record_button"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="10dp"
+        />
+
+</FrameLayout>
