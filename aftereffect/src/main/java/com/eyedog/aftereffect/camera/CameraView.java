@@ -118,6 +118,9 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     public void onPause() {
         super.onPause();
         cameraInstance().stopCamera();
+        mSurfaceTexture.release();
+        mSurfaceTexture = null;
+        mPreviewPermit.release();
     }
 
     @Override
