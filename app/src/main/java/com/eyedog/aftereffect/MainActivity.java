@@ -1,76 +1,23 @@
 package com.eyedog.aftereffect;
 
 import android.content.Intent;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import com.eyedog.aftereffect.camera.CameraView;
-import com.eyedog.aftereffect.display.DisplayActivity;
-import com.eyedog.basic.BaseUIHandlerActivity;
-import com.eyedog.widgets.RecordButton;
 
-public class MainActivity extends BaseUIHandlerActivity implements View.OnClickListener {
-    private final String TAG = getClass().getName();
-    private RecordButton mRecordButton;
-    private CameraView mCameraView;
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mRecordButton = findViewById(R.id.record_button);
-        mRecordButton.setOnRecordListener(recordListener);
-        mRecordButton.setOnClickListener(this);
-        mCameraView = findViewById(R.id.camera_view);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mCameraView.onResume();
+    public void startCamera(View view) {
+        startActivity(new Intent(this, CameraActivity.class));
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mCameraView.onPause();
+    public void startJni(View view) {
+
     }
-
-    @Override
-    public void onClick(View v) {
-    }
-
-    private void startActivity(Class<?> clazz) {
-        Intent intent = new Intent(this, clazz);
-        startActivity(intent);
-    }
-
-    RecordButton.IRecordListener recordListener = new RecordButton.IRecordListener() {
-        @Override
-        public void onRecordPreStart() {
-            Log.i(TAG, "onRecordPreStart");
-        }
-
-        @Override
-        public void onRecordStarted() {
-            Log.i(TAG, "onRecordStart");
-            mRecordButton.startRecord();
-        }
-
-        @Override
-        public void onRecordPreEnd() {
-            Log.i(TAG, "onRecordPreEnd");
-        }
-
-        @Override
-        public void onRecordEnded() {
-            Log.i(TAG, "onRecordEnded");
-            startActivity(DisplayActivity.class);
-        }
-
-        @Override
-        public void onProgressChanged(float progress) {
-
-        }
-    };
 }

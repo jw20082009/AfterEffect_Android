@@ -1,22 +1,25 @@
 package com.eyedog.aftereffect;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.os.Message;
 import android.os.Bundle;
 import android.util.Log;
-import com.eyedog.basic.BaseUIHandlerActivity;
-import com.eyedog.basic.utils.StatusBarUtil;
+import android.widget.TextView;
+import com.eyedog.basic.BaseThreadHandlerActivity;
 import com.eyedog.widgets.BgmMonitorView;
 
-public class SplashActivity extends BaseUIHandlerActivity {
+public class SplashActivity extends BaseThreadHandlerActivity {
     private final String TAG = getClass().toString();
     BgmMonitorView mMonitorView;
+    TextView mTvJni;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         mMonitorView = findViewById(R.id.monitor_view);
+        mTvJni = findViewById(R.id.tv_jni);
+        obtainThreadMessage(MSG_THREAD_JNI_TEST).sendToTarget();
         postUIDelay(enterRunnable, 1500);
     }
 
@@ -27,6 +30,33 @@ public class SplashActivity extends BaseUIHandlerActivity {
             startAnimate();
         } else {
             cancelAnimate();
+        }
+    }
+
+    private final int MSG_THREAD_JNI_TEST = 0x01;
+
+    @Override
+    protected void handleThreadMessage(Message message) {
+        super.handleThreadMessage(message);
+        switch (message.what) {
+            case MSG_THREAD_JNI_TEST:
+                String jniStr = VideoClipJni.sayHello(TAG);
+                Message uiMsg = obtainUIMessage(MSG_UI_SHOW_JNI_TEST);
+                uiMsg.obj = jniStr;
+                uiMsg.sendToTarget();
+                break;
+        }
+    }
+
+    private final int MSG_UI_SHOW_JNI_TEST = 0x01;
+
+    @Override
+    protected void handleUIMessage(Message message) {
+        super.handleUIMessage(message);
+        switch (message.what) {
+            case MSG_UI_SHOW_JNI_TEST:
+                mTvJni.setText((CharSequence) message.obj);
+                break;
         }
     }
 

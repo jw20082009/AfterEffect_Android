@@ -3,6 +3,7 @@
     package="com.eyedog.aftereffect">
 
     <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
         android:name=".AEApplication"
         android:allowBackup="true"
@@ -18,9 +19,13 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity">
+        <activity android:name=".CameraActivity">
         </activity>
         <activity android:name=".display.DisplayActivity">
+        </activity>
+        <activity android:name=".MainActivity">
+        </activity>
+        <activity android:name=".JniActivity">
         </activity>
     </application>
 
