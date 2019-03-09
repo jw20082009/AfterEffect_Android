@@ -58,7 +58,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
     private boolean startCamera() {
         int facing = mIsCameraBackForward ? Camera.CameraInfo.CAMERA_FACING_BACK
             : Camera.CameraInfo.CAMERA_FACING_FRONT;
-        return cameraInstance().tryOpenCamera(new CameraOpenCallback() {
+        boolean result = cameraInstance().tryOpenCamera(new CameraOpenCallback() {
             @Override
             public void cameraReady() {
                 if (!cameraInstance().isPreviewing()) {
@@ -66,17 +66,19 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
                     mIncomingHeight = cameraInstance().previewHeight();
                     if (mSurfaceTexture != null && mPreviewPermit.tryAcquire()) {
                         cameraInstance().startPreview(mSurfaceTexture);
+                        queueEvent(new Runnable() {
+                            @Override
+                            public void run() {
+                                setCameraPreviewSize(mIncomingWidth,
+                                    mIncomingHeight);
+                            }
+                        });
                     }
-                    queueEvent(new Runnable() {
-                        @Override
-                        public void run() {
-                            setCameraPreviewSize(mIncomingWidth,
-                                mIncomingHeight);
-                        }
-                    });
                 }
             }
         }, facing);
+        Log.i(TAG, "startCamera finished");
+        return result;
     }
 
     public synchronized void switchCamera() {
@@ -107,24 +109,27 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
     @Override
     public void onResume() {
-        super.onResume();
+        Log.i(TAG, "onResume");
         if (cameraInstance().isCameraOpened()) {
             cameraInstance().stopCamera();
         }
         startCamera();
+        super.onResume();
     }
 
     @Override
     public void onPause() {
-        super.onPause();
+        Log.i(TAG, "onPause");
         cameraInstance().stopCamera();
         mSurfaceTexture.release();
         mSurfaceTexture = null;
         mPreviewPermit.release();
+        super.onPause();
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        Log.i(TAG, "onSurfaceCreated");
         mFullScreen = new FullFrameRect(
             new Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_EXT));
         mTextureId = mFullScreen.createTextureObject();
@@ -140,6 +145,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
+        Log.i(TAG, "onSurfaceChanged");
         mSurfaceWidth = width;
         mSurfaceHeight = height;
         if (width > 0 && height > 0) {
@@ -152,6 +158,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
     @Override
     public void onDrawFrame(GL10 gl) {
+        Log.i(TAG, "onDrawFrame");
         mSurfaceTexture.updateTexImage();
         if (mIncomingSizeUpdated) {
             mFullScreen.getProgram().setTexSize(mIncomingWidth, mIncomingHeight);
@@ -163,6 +170,7 @@ public class CameraView extends GLSurfaceView implements GLSurfaceView.Renderer,
 
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+        Log.i(TAG, "onFrameAvailable");
         requestRender();
     }
 }

@@ -2,14 +2,16 @@ package com.eyedog.aftereffect;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import com.eyedog.aftereffect.camera.CameraView;
 import com.eyedog.aftereffect.display.DisplayActivity;
+import com.eyedog.basic.BaseThreadHandlerActivity;
 import com.eyedog.basic.BaseUIHandlerActivity;
 import com.eyedog.widgets.RecordButton;
 
-public class CameraActivity extends BaseUIHandlerActivity implements View.OnClickListener {
+public class CameraActivity extends BaseThreadHandlerActivity implements View.OnClickListener {
     private final String TAG = getClass().getName();
     private RecordButton mRecordButton;
     private CameraView mCameraView;
@@ -27,17 +29,37 @@ public class CameraActivity extends BaseUIHandlerActivity implements View.OnClic
     @Override
     protected void onResume() {
         super.onResume();
-        mCameraView.onResume();
+        removeThreadMessage(MSG_BACK_RESUME_CAMERA);
+        removeThreadMessage(MSG_BACK_PAUSE_CAMERA);
+        sendEmptyThreadMessage(MSG_BACK_RESUME_CAMERA);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        mCameraView.onPause();
+        removeThreadMessage(MSG_BACK_RESUME_CAMERA);
+        removeThreadMessage(MSG_BACK_PAUSE_CAMERA);
+        sendEmptyThreadMessage(MSG_BACK_PAUSE_CAMERA);
     }
 
     @Override
     public void onClick(View v) {
+    }
+
+    private final int MSG_BACK_RESUME_CAMERA = 0x01;
+    private final int MSG_BACK_PAUSE_CAMERA = 0x02;
+
+    @Override
+    protected void handleThreadMessage(Message message) {
+        super.handleThreadMessage(message);
+        switch (message.what) {
+            case MSG_BACK_RESUME_CAMERA:
+                mCameraView.onResume();
+                break;
+            case MSG_BACK_PAUSE_CAMERA:
+                mCameraView.onPause();
+                break;
+        }
     }
 
     private void startActivity(Class<?> clazz) {

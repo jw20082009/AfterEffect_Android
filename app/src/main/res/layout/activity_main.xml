@@ -30,6 +30,13 @@
                 android:text="JNI Demo"
                 android:onClick="startJni"
                 />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="GL Player"
+                android:onClick="startGLlayer"
+                />
         </LinearLayout>
     </ScrollView>
 

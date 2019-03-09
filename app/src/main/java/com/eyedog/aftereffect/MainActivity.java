@@ -20,4 +20,8 @@ public class MainActivity extends AppCompatActivity {
     public void startJni(View view) {
 
     }
+
+    public void startGLlayer(View view) {
+        startActivity(new Intent(this, GLPlayerActivity.class));
+    }
 }

@@ -12,5 +12,4 @@ extern "C"
 {
 #define JNI(rettype, name) JNIEXPORT rettype JNICALL Java_com_eyedog_aftereffect_VideoClipJni_##name
 JNI(jstring, sayHello)(JNIEnv *env, jclass type, jstring name_);
-
 }

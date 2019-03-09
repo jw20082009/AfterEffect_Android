@@ -30,7 +30,6 @@ public class CameraInstance {
 
     private Camera mCameraDevice;
     private Camera.Parameters mParams;
-
     public static final int DEFAULT_PREVIEW_RATE = 30;
 
     private boolean mIsPreviewing = false;
@@ -93,6 +92,7 @@ public class CameraInstance {
     }
 
     public synchronized boolean tryOpenCamera(CameraOpenCallback callback, int facing) {
+        Log.i("CameraView", "tryOpenCamera");
         try {
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.FROYO) {
                 int numberOfCameras = Camera.getNumberOfCameras();
@@ -106,17 +106,22 @@ public class CameraInstance {
                 }
             }
             stopPreview();
+            Log.i("CameraView", "stopPreview");
             if (mCameraDevice != null) {
+                Log.i("CameraView", "mCameraDevice != null");
                 mCameraDevice.release();
                 mCameraDevice = null;
             }
             if (mDefaultCameraID >= 0) {
+                Log.i("CameraView", "Camera.open 000 " + mDefaultCameraID);
                 mCameraDevice = Camera.open(mDefaultCameraID);
+                Log.i("CameraView", "Camera.open 111");
             } else {
                 mCameraDevice = Camera.open();
                 mFacing = Camera.CameraInfo.CAMERA_FACING_BACK; //default: back facing
             }
             mCameraDevice.setDisplayOrientation(90);
+            Log.i("CameraView", "setDisplayOrientation");
         } catch (Exception e) {
             e.printStackTrace();
             mCameraDevice = null;
@@ -127,6 +132,7 @@ public class CameraInstance {
                 initCamera(DEFAULT_PREVIEW_RATE);
                 if (callback != null) {
                     callback.cameraReady();
+                    Log.i("CameraView", "cameraReady");
                 }
             } catch (Exception e) {
                 mCameraDevice.release();
@@ -173,7 +179,7 @@ public class CameraInstance {
 
     public synchronized void stopPreview() {
         if (mIsPreviewing && mCameraDevice != null) {
-            Log.i(LOG_TAG, "Camera stopPreview...");
+            Log.i("CameraView", "Camera stopPreview...");
             mCameraDevice.stopPreview();
             mIsPreviewing = false;
         }
@@ -232,13 +238,13 @@ public class CameraInstance {
 
     public void initCamera(int previewRate) {
         if (mCameraDevice == null) {
-            Log.e(LOG_TAG, "initCamera: Camera is not opened!");
+            Log.e("CameraView", "initCamera: Camera is not opened!");
             return;
         }
         mParams = mCameraDevice.getParameters();
         List<Integer> supportedPictureFormats = mParams.getSupportedPictureFormats();
         for (int fmt : supportedPictureFormats) {
-            Log.i(LOG_TAG, String.format("Picture Format: %x", fmt));
+            Log.i("CameraView", String.format("Picture Format: %x", fmt));
         }
         mParams.setPictureFormat(PixelFormat.JPEG);
         List<Camera.Size> picSizes = mParams.getSupportedPictureSizes();
@@ -322,7 +328,8 @@ public class CameraInstance {
     public synchronized void focusAtPoint(float x, float y, float radius,
         final Camera.AutoFocusCallback callback) {
         if (mCameraDevice == null) {
-            Log.e(LOG_TAG, "Error: focus after release.");
+            Log.e("CameraView", "Error: focus after release.");
+
             return;
         }
 
