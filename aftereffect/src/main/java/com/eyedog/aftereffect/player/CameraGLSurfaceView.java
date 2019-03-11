@@ -1,3 +1,4 @@
+
 package com.eyedog.aftereffect.player;
 
 import android.content.Context;
@@ -25,9 +26,9 @@ public class CameraGLSurfaceView extends BaseGLSurfaceView {
 
     @Override
     public void onPause() {
-        getRenderer().release();
         super.onPause();
         getRenderer().stopCamera();
+        getRenderer().release();
     }
 
     @Override

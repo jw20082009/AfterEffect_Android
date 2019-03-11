@@ -1,18 +1,21 @@
+
 package com.eyedog.aftereffect.player;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.os.Looper;
+
 import com.eyedog.aftereffect.camera.CameraDev;
 import com.eyedog.aftereffect.camera.CameraHandler;
 import com.eyedog.aftereffect.filters.GLImageFilter;
 import com.eyedog.aftereffect.filters.GLImageOESInputFilter;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
 import com.eyedog.aftereffect.utils.TextureRotationUtils;
+
 import java.nio.FloatBuffer;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -20,21 +23,37 @@ import javax.microedition.khronos.opengles.GL10;
  * created by jw200 at 2019/3/9 20:20
  **/
 public class CameraRenderer extends BaseRenderer {
+    private final String TAG = "CameraRenderer";
 
     protected int mTextureId;
+
     protected SurfaceTexture mSurfaceTexture;
+
     protected CameraDev mCameraDev;
+
     protected CameraHandler mCallback;
+
     protected Object lock = new Object();
+
     protected int mIncomingWidth, mIncomingHeight, mSurfaceWidth, mSurfaceHeight;
+
     protected final float[] mSTMatrix = new float[16];
+
     protected GLImageFilter mOutFilter;
+
     protected GLImageOESInputFilter mInputFilter;
+
     private FloatBuffer mVertexBuffer;
+
     private FloatBuffer mTextureBuffer;
+
     // 用于显示裁剪的纹理顶点缓冲
     private FloatBuffer mDisplayVertexBuffer;
+
     private FloatBuffer mDisplayTextureBuffer;
+
+    private boolean mIncomingSizeUpdated;
+
     private ScaleType mScaleType = ScaleType.CENTER_CROP;
 
     CameraRenderer(GLSurfaceView surfaceView) {
@@ -48,14 +67,14 @@ public class CameraRenderer extends BaseRenderer {
         super.onSurfaceCreated(gl, config);
         GLES30.glDisable(GLES30.GL_DEPTH_TEST);
         GLES30.glDisable(GLES30.GL_CULL_FACE);
-        mTextureId = createTextureObject();
         synchronized (lock) {
+            mTextureId = createTextureObject();
             mSurfaceTexture = new SurfaceTexture(mTextureId);
             mSurfaceTexture.setOnFrameAvailableListener(cameraAvaliableListener);
+            mCameraDev.startPreview(mSurfaceTexture);
+            initBuffers();
+            initFilters(mSurfaceView.getContext());
         }
-        mCameraDev.startPreview(mSurfaceTexture);
-        initBuffers();
-        initFilters(mSurfaceView.getContext());
     }
 
     @Override
@@ -63,27 +82,37 @@ public class CameraRenderer extends BaseRenderer {
         super.onSurfaceChanged(gl, width, height);
         mSurfaceWidth = width;
         mSurfaceHeight = height;
-        adjustCoordinateSize();
-        onFilterChanged();
+        if (mIncomingWidth > 0 && mIncomingHeight > 0) {
+            adjustCoordinateSize();
+            onFilterChanged();
+        }
     }
 
     @Override
     public void onDrawFrame(GL10 gl) {
         super.onDrawFrame(gl);
         mSurfaceTexture.updateTexImage();
+        if (mIncomingSizeUpdated) {
+            adjustCoordinateSize();
+            onFilterChanged();
+            mIncomingSizeUpdated = false;
+        }
         mSurfaceTexture.getTransformMatrix(mSTMatrix);
         mInputFilter.setTextureTransformMatrix(mSTMatrix);
-        int currentTextureId =
-            mInputFilter.drawFrameBuffer(mTextureId, mVertexBuffer, mTextureBuffer);
-        mOutFilter.drawFrame(currentTextureId, mDisplayVertexBuffer,
-            mDisplayTextureBuffer);
+        int currentTextureId = mInputFilter.drawFrameBuffer(mTextureId, mVertexBuffer,
+                mTextureBuffer);
+        mOutFilter.drawFrame(currentTextureId, mDisplayVertexBuffer, mDisplayTextureBuffer);
     }
 
     public void startCamera(int facing) {
+        mIncomingSizeUpdated = false;
         mCameraDev.startCamera(facing, 1080, 1920);
     }
 
     public void stopCamera() {
+        synchronized (lock) {
+            mSurfaceTexture = null;
+        }
         mCameraDev.stopCamera();
     }
 
@@ -162,7 +191,7 @@ public class CameraRenderer extends BaseRenderer {
         float[] textureVertices = TextureRotationUtils.TextureVertices;
         float[] vertexVertices = TextureRotationUtils.CubeVertices;
         float ratioMax = Math.max((float) mViewWidth / mTextureWidth,
-            (float) mViewHeight / mTextureHeight);
+                (float) mViewHeight / mTextureHeight);
         // 新的宽高
         int imageWidth = Math.round(mTextureWidth * ratioMax);
         int imageHeight = Math.round(mTextureHeight * ratioMax);
@@ -171,25 +200,25 @@ public class CameraRenderer extends BaseRenderer {
         float ratioHeight = (float) imageHeight / (float) mViewHeight;
         if (mScaleType == ScaleType.CENTER_INSIDE) {
             vertexCoord = new float[] {
-                vertexVertices[0] / ratioHeight, vertexVertices[1] / ratioWidth,
-                vertexVertices[2], vertexVertices[3] / ratioHeight,
-                vertexVertices[4] / ratioWidth, vertexVertices[5],
-                vertexVertices[6] / ratioHeight, vertexVertices[7] / ratioWidth,
-                vertexVertices[8], vertexVertices[9] / ratioHeight,
-                vertexVertices[10] / ratioWidth, vertexVertices[11],
+                    vertexVertices[0] / ratioHeight, vertexVertices[1] / ratioWidth,
+                    vertexVertices[2], vertexVertices[3] / ratioHeight,
+                    vertexVertices[4] / ratioWidth, vertexVertices[5],
+                    vertexVertices[6] / ratioHeight, vertexVertices[7] / ratioWidth,
+                    vertexVertices[8], vertexVertices[9] / ratioHeight,
+                    vertexVertices[10] / ratioWidth, vertexVertices[11],
             };
         } else if (mScaleType == ScaleType.CENTER_CROP) {
             float distHorizontal = (1 - 1 / ratioWidth) / 2;
             float distVertical = (1 - 1 / ratioHeight) / 2;
             textureCoord = new float[] {
-                addDistance(textureVertices[0], distVertical),
-                addDistance(textureVertices[1], distHorizontal),
-                addDistance(textureVertices[2], distVertical),
-                addDistance(textureVertices[3], distHorizontal),
-                addDistance(textureVertices[4], distVertical),
-                addDistance(textureVertices[5], distHorizontal),
-                addDistance(textureVertices[6], distVertical),
-                addDistance(textureVertices[7], distHorizontal),
+                    addDistance(textureVertices[0], distVertical),
+                    addDistance(textureVertices[1], distHorizontal),
+                    addDistance(textureVertices[2], distVertical),
+                    addDistance(textureVertices[3], distHorizontal),
+                    addDistance(textureVertices[4], distVertical),
+                    addDistance(textureVertices[5], distHorizontal),
+                    addDistance(textureVertices[6], distVertical),
+                    addDistance(textureVertices[7], distHorizontal),
             };
         }
         if (vertexCoord == null) {
@@ -209,13 +238,12 @@ public class CameraRenderer extends BaseRenderer {
         return coordinate == 0.0f ? distance : 1 - distance;
     }
 
-    SurfaceTexture.OnFrameAvailableListener cameraAvaliableListener =
-        new SurfaceTexture.OnFrameAvailableListener() {
-            @Override
-            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                mSurfaceView.requestRender();
-            }
-        };
+    SurfaceTexture.OnFrameAvailableListener cameraAvaliableListener = new SurfaceTexture.OnFrameAvailableListener() {
+        @Override
+        public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+            mSurfaceView.requestRender();
+        }
+    };
 
     class CameraCallback extends CameraHandler {
         public CameraCallback(Looper looper) {
@@ -228,20 +256,30 @@ public class CameraRenderer extends BaseRenderer {
 
         @Override
         protected void handleStartSuccess(int previewWidth, int previewHeight, int pictureWidth,
-            int pictureHeight) {
+                int pictureHeight) {
             synchronized (lock) {
-                mIncomingWidth = previewWidth;
-                mIncomingHeight = previewHeight;
+                if (mIncomingWidth != previewWidth || mIncomingHeight != previewHeight) {
+                    if (previewWidth > previewHeight) {
+                        mIncomingWidth = previewHeight;
+                        mIncomingHeight = previewWidth;
+                    } else {
+                        mIncomingWidth = previewWidth;
+                        mIncomingHeight = previewHeight;
+                    }
+                }
                 if (mSurfaceTexture != null) {
                     mCameraDev.startPreview(mSurfaceTexture);
                 }
             }
         }
+
+        @Override
+        protected void handleStartPreview() {
+            mIncomingSizeUpdated = true;
+        }
     }
 
     public enum ScaleType {
-        CENTER_INSIDE,
-        CENTER_CROP,
-        FIT_XY
+        CENTER_INSIDE, CENTER_CROP, FIT_XY
     }
 }
