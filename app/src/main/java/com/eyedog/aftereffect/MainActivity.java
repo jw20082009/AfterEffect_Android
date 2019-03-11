@@ -21,4 +21,8 @@ public class MainActivity extends AppCompatActivity {
     public void startGLlayer(View view) {
         startActivity(new Intent(this, GLPlayerActivity.class));
     }
+
+    public void startGLImage(View view) {
+        startActivity(new Intent(this, GLImageActivity.class));
+    }
 }
