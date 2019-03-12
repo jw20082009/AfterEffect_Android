@@ -3,6 +3,8 @@ package com.eyedog.aftereffect.player;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -28,31 +30,9 @@ public class ImageGLSurfaceView extends BaseGLSurfaceView {
         if (TextUtils.isEmpty(url)) {
             return;
         }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        }).start();
-        Glide.with(getContext()).asBitmap().load(R.drawable.bt_1).into(new SimpleTarget<Bitmap>() {
-            @Override
-            public void onResourceReady(@NonNull Bitmap resource,
-                    @Nullable Transition<? super Bitmap> transition) {
-                getRenderer().setBitmap(resource);
-            }
-        });
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int width = MeasureSpec.getSize(widthMeasureSpec);
-        int height = (int) (width * 16.0f / 9.0f);
-        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
+        Drawable drawable = getContext().getResources().getDrawable(R.drawable.bt_1);
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+        getRenderer().setBitmap(bitmapDrawable.getBitmap());
     }
 
     @Override
@@ -63,8 +43,9 @@ public class ImageGLSurfaceView extends BaseGLSurfaceView {
 
     @Override
     protected ImageRenderer getRenderer() {
-        if (mRenderer == null)
+        if (mRenderer == null) {
             mRenderer = new ImageRenderer(this);
+        }
         return (ImageRenderer) mRenderer;
     }
 }
