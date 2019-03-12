@@ -68,6 +68,8 @@ public class GLImageFilter {
     // 显示输出的宽高
     protected int mDisplayWidth;
     protected int mDisplayHeight;
+    protected int mDisplayOffX = 0;
+    protected int mDisplayOffY = 1;
 
     // FBO的宽高，可能跟输入的纹理大小不一致
     protected int mFrameWidth = -1;
@@ -126,6 +128,13 @@ public class GLImageFilter {
         mDisplayHeight = height;
     }
 
+    public void onDisplaySizeChanged(int x, int y, int width, int height) {
+        mDisplayOffX = x;
+        mDisplayOffY = y;
+        mDisplayWidth = width;
+        mDisplayHeight = height;
+    }
+
     /**
      * 绘制Frame
      */
@@ -137,7 +146,7 @@ public class GLImageFilter {
         }
 
         // 设置视口大小
-        GLES30.glViewport(0, 0, mDisplayWidth, mDisplayHeight);
+        GLES30.glViewport(mDisplayOffX, mDisplayOffY, mDisplayWidth, mDisplayHeight);
 
         // 使用当前的program
         GLES30.glUseProgram(mProgramHandle);
@@ -168,7 +177,7 @@ public class GLImageFilter {
         }
 
         // 绑定FBO
-        GLES30.glViewport(0, 0, mFrameWidth, mFrameHeight);
+        GLES30.glViewport(mDisplayOffX, mDisplayOffY, mFrameWidth, mFrameHeight);
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, mFrameBuffers[0]);
         // 使用当前的program
         GLES30.glUseProgram(mProgramHandle);

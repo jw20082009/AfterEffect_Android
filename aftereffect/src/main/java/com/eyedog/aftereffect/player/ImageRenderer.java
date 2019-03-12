@@ -9,6 +9,8 @@ import android.util.Log;
 import com.eyedog.aftereffect.filters.GLImageFilter;
 import com.eyedog.aftereffect.filters.GLImageGaussianBlurFilter;
 import com.eyedog.aftereffect.filters.GLImageInputFilter;
+import com.eyedog.aftereffect.filters.StickerFilter;
+import com.eyedog.aftereffect.utils.ImageUtils;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
 import com.eyedog.aftereffect.utils.TextureRotationUtils;
 
@@ -20,9 +22,7 @@ import javax.microedition.khronos.opengles.GL10;
 public class ImageRenderer extends BaseRenderer {
     private final String TAG = "ImageRenderer";
 
-    protected GLImageInputFilter mInputFilter;
-
-    protected GLImageGaussianBlurFilter mGaussFilter;
+    protected StickerFilter mInputFilter;
 
     protected GLImageFilter mDisplayFilter;
 
@@ -36,15 +36,17 @@ public class ImageRenderer extends BaseRenderer {
 
     protected int mViewHeight;
 
-    protected int mInputTexture = OpenGLUtils.GL_NOT_TEXTURE;
+    //无需释放，在filter中release
+    protected int mInputTexture = OpenGLUtils.GL_NOT_TEXTURE, mInputTexture2 =
+        OpenGLUtils.GL_NOT_TEXTURE;
 
     private FloatBuffer mVertexBuffer;
 
     private FloatBuffer mTextureBuffer;
 
-    private Bitmap mBitmap;
+    private Bitmap mBitmap, mBlurBitmap;
 
-    private boolean mHasTextureChanged = false;
+    private boolean mHasTextureChanged = false, mHasSurfaceCreated = false;
 
     private Object mLock = new Object();
 
@@ -56,13 +58,25 @@ public class ImageRenderer extends BaseRenderer {
     }
 
     public void setBitmap(final Bitmap bitmap) {
+        mBitmap = bitmap;
+        int width = mBitmap.getWidth();
+        int height = mBitmap.getHeight();
+        int scaledWidth = width;
+        int scaledHeight = height;
+        if (300 < width) {
+            scaledWidth = 300;
+            scaledHeight = (int) ((1.0f * 300 / width) * height);
+        }
+        mTextureWidth = scaledWidth;
+        mTextureHeight = scaledHeight;
+        mBlurBitmap =
+            ImageUtils.blurBitmap(mSurfaceView.getContext(), mBitmap, scaledWidth, scaledHeight,
+                20);
         synchronized (mLock) {
-            Log.i(TAG, "setBitmap");
-            mBitmap = bitmap;
-            mTextureWidth = mBitmap.getWidth();
-            mTextureHeight = mBitmap.getHeight();
             mHasTextureChanged = true;
-            mSurfaceView.requestRender();
+            if (mHasSurfaceCreated) {
+                mSurfaceView.requestRender();
+            }
         }
     }
 
@@ -70,9 +84,9 @@ public class ImageRenderer extends BaseRenderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         super.onSurfaceCreated(gl, config);
         GLES30.glClearColor(0.5F, 0.5F, 0F, 1.0F);
-        Log.i(TAG, "onSurfaceCreated");
         if (mBitmap != null && !mBitmap.isRecycled()) {
             synchronized (mLock) {
+                Log.i(TAG, "onSurfaceCreated ");
                 mHasTextureChanged = true;
             }
         }
@@ -84,58 +98,54 @@ public class ImageRenderer extends BaseRenderer {
         super.onSurfaceChanged(gl, width, height);
         this.mViewWidth = width;
         this.mViewHeight = height;
-        GLES30.glViewport(0, 0, width, height);
-        Log.i(TAG, "onSurfaceChanged0 : " + this.mViewWidth + " * " + this.mViewHeight + ";"
-                + mHasTextureChanged);
-        if (mHasTextureChanged && mViewWidth > 0) {
-            synchronized (mLock) {
-                Log.i(TAG, "onSurfaceChanged1 : " + this.mViewWidth + " * " + this.mViewHeight + ";"
-                        + mHasTextureChanged);
-                if (mHasTextureChanged && mViewWidth > 0) {
-                    mHasTextureChanged = false;
-                    createTexture();
-                    // Note: 如果此时显示输出滤镜对象为空，则表示调用了onPause方法销毁了所有GL对象资源，需要重新初始化滤镜
-                    onFilterSizeChanged();
-                    mSurfaceView.requestRender();
-                }
-            }
+        synchronized (mLock) {
+            Log.i(TAG, "onSurfaceChanged " + mHasTextureChanged);
+            this.mHasSurfaceCreated = true;
         }
+        GLES30.glViewport(0, 0, width, height);
+        changeTexture(true);
     }
 
     @Override
     public void onDrawFrame(GL10 gl) {
         super.onDrawFrame(gl);
-        Log.i(TAG, "onDrawFrame");
-        if (mHasTextureChanged && mViewWidth > 0) {
-            mHasTextureChanged = false;
-            createTexture();
-            // Note: 如果此时显示输出滤镜对象为空，则表示调用了onPause方法销毁了所有GL对象资源，需要重新初始化滤镜
-            onFilterSizeChanged();
-        }
+        //如果onSurfaceChanged回调时bitmap还未被设置，需要在此设置滤镜参数
+        changeTexture(false);
         int currentTexture = mInputTexture;
         if (mInputFilter != null) {
             currentTexture = mInputFilter.drawFrameBuffer(currentTexture, mVertexBuffer,
-                    mTextureBuffer);
-        }
-        if (mGaussFilter != null) {
-            currentTexture = mGaussFilter.drawFrameBuffer(currentTexture, mVertexBuffer,
-                    mTextureBuffer);
+                mTextureBuffer);
         }
         mDisplayFilter.drawFrame(currentTexture, mVertexBuffer, mTextureBuffer);
     }
 
+    private void changeTexture(boolean mNeedRequestRender) {
+        if (mHasTextureChanged && mViewWidth > 0) {
+            synchronized (mLock) {
+                if (mHasTextureChanged && mViewWidth > 0) {
+                    mHasTextureChanged = false;
+                    if (mBitmap != null && !mBitmap.isRecycled()) {
+                        mInputTexture = OpenGLUtils.createTexture(mBitmap, mInputTexture);
+                    }
+                    if (mBlurBitmap != null && !mBlurBitmap.isRecycled()) {
+                        mInputTexture2 = OpenGLUtils.createTexture(mBlurBitmap, mInputTexture2);
+                        mInputFilter.setStickerTextureId(mInputTexture2);
+                    }
+                    onFilterSizeChanged();
+                    if (mNeedRequestRender) {
+                        mSurfaceView.requestRender();
+                    }
+                }
+            }
+        }
+    }
+
     private void initFilters() {
         if (mInputFilter == null) {
-            mInputFilter = new GLImageInputFilter(mSurfaceView.getContext());
+            mInputFilter = new StickerFilter(mSurfaceView.getContext());
         } else {
             mInputFilter.initProgramHandle();
         }
-        if (mGaussFilter == null) {
-            mGaussFilter = new GLImageGaussianBlurFilter(mSurfaceView.getContext());
-        } else {
-            mGaussFilter.initProgramHandle();
-        }
-        mGaussFilter.setBlurSize(50f);
         if (mDisplayFilter == null) {
             mDisplayFilter = new GLImageFilter(mSurfaceView.getContext());
         } else {
@@ -147,44 +157,33 @@ public class ImageRenderer extends BaseRenderer {
         if (mInputFilter != null) {
             mInputFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
             mInputFilter.initFrameBuffer(mTextureWidth, mTextureHeight);
-            mInputFilter.onDisplaySizeChanged(mViewWidth, (int) (mViewWidth * (1.0f * mTextureHeight/mTextureWidth)));
-        }
-        if (mGaussFilter != null) {
-            mGaussFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
-            mGaussFilter.initFrameBuffer(mTextureWidth, mTextureHeight);
-            mGaussFilter.onDisplaySizeChanged(mViewWidth,  (int) (mViewWidth * (1.0f * mTextureHeight/mTextureWidth)));
+            mInputFilter.onDisplaySizeChanged(mViewWidth, mViewHeight);
         }
         if (mDisplayFilter != null) {
             mDisplayFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
-            mDisplayFilter.onDisplaySizeChanged(mViewWidth,  (int) (mViewWidth * (1.0f * mTextureHeight/mTextureWidth)));
+            //int scaledHeight = (int) (mViewWidth * (1.0f * mTextureHeight / mTextureWidth));
+            //int x = 0;
+            //int y = (int) ((mViewHeight - scaledHeight) / 2.0f);
+            mDisplayFilter.onDisplaySizeChanged(mViewWidth, mViewHeight);
         }
     }
 
     private void createTexture() {
-        if (mBitmap != null && !mBitmap.isRecycled()) {
-            synchronized (mLock) {
-                if (mBitmap != null && !mBitmap.isRecycled())
-                    mInputTexture = OpenGLUtils.createTexture(mBitmap, mInputTexture);
-            }
-        }
+
     }
 
     public void release() {
+        synchronized (mLock) {
+            mHasSurfaceCreated = false;
+            mHasTextureChanged = false;
+        }
         if (mInputFilter != null) {
             mInputFilter.release();
             mInputFilter = null;
         }
-        if (mGaussFilter != null) {
-            mGaussFilter.release();
-            mGaussFilter = null;
-        }
         if (mDisplayFilter != null) {
             mDisplayFilter.release();
             mDisplayFilter = null;
-        }
-        if (mInputTexture != OpenGLUtils.GL_NOT_TEXTURE) {
-            OpenGLUtils.deleteTexture(mInputTexture);
-            mInputTexture = OpenGLUtils.GL_NOT_TEXTURE;
         }
     }
 }
