@@ -11,7 +11,7 @@ import com.eyedog.aftereffect.utils.OpenGLUtils;
 public class GLImageInputFilter extends GLImageFilter {
 
     public GLImageInputFilter(Context context) {
-        this(context, VERTEX_SHADER,
+        this(context, OpenGLUtils.getShaderFromAssets(context, "shader/base/vertex_imagecenter_input.glsl"),
                 OpenGLUtils.getShaderFromAssets(context, "shader/base/fragment_image_input.glsl"));
     }
 

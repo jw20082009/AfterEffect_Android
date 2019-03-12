@@ -44,6 +44,13 @@ public class ImageGLSurfaceView extends BaseGLSurfaceView {
     }
 
     @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+        int height = (int) (width * 16.0f / 9.0f);
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
     }

@@ -7,6 +7,7 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 
 import com.eyedog.aftereffect.filters.GLImageFilter;
+import com.eyedog.aftereffect.filters.GLImageGaussianBlurFilter;
 import com.eyedog.aftereffect.filters.GLImageInputFilter;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
 import com.eyedog.aftereffect.utils.TextureRotationUtils;
@@ -20,6 +21,8 @@ public class ImageRenderer extends BaseRenderer {
     private final String TAG = "ImageRenderer";
 
     protected GLImageInputFilter mInputFilter;
+
+    protected GLImageGaussianBlurFilter mGaussFilter;
 
     protected GLImageFilter mDisplayFilter;
 
@@ -66,6 +69,7 @@ public class ImageRenderer extends BaseRenderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         super.onSurfaceCreated(gl, config);
+        GLES30.glClearColor(0.5F, 0.5F, 0F, 1.0F);
         Log.i(TAG, "onSurfaceCreated");
         if (mBitmap != null && !mBitmap.isRecycled()) {
             synchronized (mLock) {
@@ -113,6 +117,10 @@ public class ImageRenderer extends BaseRenderer {
             currentTexture = mInputFilter.drawFrameBuffer(currentTexture, mVertexBuffer,
                     mTextureBuffer);
         }
+        if (mGaussFilter != null) {
+            currentTexture = mGaussFilter.drawFrameBuffer(currentTexture, mVertexBuffer,
+                    mTextureBuffer);
+        }
         mDisplayFilter.drawFrame(currentTexture, mVertexBuffer, mTextureBuffer);
     }
 
@@ -122,6 +130,12 @@ public class ImageRenderer extends BaseRenderer {
         } else {
             mInputFilter.initProgramHandle();
         }
+        if (mGaussFilter == null) {
+            mGaussFilter = new GLImageGaussianBlurFilter(mSurfaceView.getContext());
+        } else {
+            mGaussFilter.initProgramHandle();
+        }
+        mGaussFilter.setBlurSize(50f);
         if (mDisplayFilter == null) {
             mDisplayFilter = new GLImageFilter(mSurfaceView.getContext());
         } else {
@@ -133,11 +147,16 @@ public class ImageRenderer extends BaseRenderer {
         if (mInputFilter != null) {
             mInputFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
             mInputFilter.initFrameBuffer(mTextureWidth, mTextureHeight);
-            mInputFilter.onDisplaySizeChanged(mViewWidth, mViewHeight);
+            mInputFilter.onDisplaySizeChanged(mViewWidth, (int) (mViewWidth * (1.0f * mTextureHeight/mTextureWidth)));
+        }
+        if (mGaussFilter != null) {
+            mGaussFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
+            mGaussFilter.initFrameBuffer(mTextureWidth, mTextureHeight);
+            mGaussFilter.onDisplaySizeChanged(mViewWidth,  (int) (mViewWidth * (1.0f * mTextureHeight/mTextureWidth)));
         }
         if (mDisplayFilter != null) {
             mDisplayFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
-            mDisplayFilter.onDisplaySizeChanged(mViewWidth, mViewHeight);
+            mDisplayFilter.onDisplaySizeChanged(mViewWidth,  (int) (mViewWidth * (1.0f * mTextureHeight/mTextureWidth)));
         }
     }
 
@@ -154,6 +173,10 @@ public class ImageRenderer extends BaseRenderer {
         if (mInputFilter != null) {
             mInputFilter.release();
             mInputFilter = null;
+        }
+        if (mGaussFilter != null) {
+            mGaussFilter.release();
+            mGaussFilter = null;
         }
         if (mDisplayFilter != null) {
             mDisplayFilter.release();

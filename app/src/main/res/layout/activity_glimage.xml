@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".GLImageActivity">
+    tools:context=".GLImageActivity"
+    android:background="@android:color/darker_gray">
 
     <com.eyedog.aftereffect.player.ImageGLSurfaceView
         android:id="@+id/surfaceview"
