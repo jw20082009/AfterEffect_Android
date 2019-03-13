@@ -52,4 +52,8 @@ public class ImageGLSurfaceView extends BaseGLSurfaceView {
         }
         return (ImageRenderer) mRenderer;
     }
+
+    protected void scaleSize(float scale) {
+        getRenderer().scaleSize(scale);
+    }
 }

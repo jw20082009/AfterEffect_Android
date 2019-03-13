@@ -7,7 +7,7 @@
     tools:context=".GLImageActivity"
     android:background="@android:color/darker_gray">
 
-    <com.eyedog.aftereffect.player.ImageGLSurfaceView
+    <com.eyedog.aftereffect.player.ZoomSurfaceView
         android:id="@+id/surfaceview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

@@ -89,16 +89,6 @@ public class StickerFilter extends GLImageFilter {
         if (size == null) {
             return;
         }
-        if (size.wRatio >= 1) {
-            size.wRatio = 1.0f;
-        } else if (size.wRatio <= 0) {
-            size.wRatio = 0;
-        }
-        if (size.hRatio >= 1) {
-            size.hRatio = 1.0f;
-        } else if (size.hRatio <= 0) {
-            size.hRatio = 0;
-        }
         this.mSize = size;
     }
 

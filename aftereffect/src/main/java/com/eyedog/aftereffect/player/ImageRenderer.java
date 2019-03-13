@@ -26,6 +26,10 @@ public class ImageRenderer extends BaseRenderer {
 
     private final float SMALL_RATIO = 0.4F;
 
+    private float mCurrentRatio = LARGE_RATIO;
+
+    private int mScaleMode = 0;//0:宽缩放；1:高缩放
+
     protected StickerFilter mStickerFilter;
 
     protected GLImageFilter mDisplayFilter;
@@ -133,20 +137,8 @@ public class ImageRenderer extends BaseRenderer {
                     }
                     if (mBitmap != null && !mBitmap.isRecycled()) {
                         mInputTexture2 = OpenGLUtils.createTexture(mBitmap, mInputTexture2);
-                        int width = mBitmap.getWidth();
-                        int height = mBitmap.getHeight();
                         mStickerFilter.setStickerTextureId(mInputTexture2);
-                        float w = mViewWidth * LARGE_RATIO;
-                        float h = mViewHeight * LARGE_RATIO;
-                        float scaledW = w;
-                        float scaledH = height / (width / w);
-                        if (scaledH > h) {
-                            scaledH = h;
-                            scaledW = width / (height / h);
-                        }
-                        mStickerFilter.setSize(
-                            new StickerFilter.Vec2((float) (scaledW / mViewWidth),
-                                (float) (scaledH / mViewHeight)));
+                        initSize();
                     }
                     onFilterSizeChanged();
                     if (mNeedRequestRender) {
@@ -154,6 +146,57 @@ public class ImageRenderer extends BaseRenderer {
                     }
                 }
             }
+        }
+    }
+
+    private void initSize() {
+        if (mBitmap != null && !mBitmap.isRecycled() && mViewWidth > 0 && mViewHeight > 0) {
+            int width = mBitmap.getWidth();
+            int height = mBitmap.getHeight();
+            float w = mViewWidth * LARGE_RATIO;
+            float h = mViewHeight * LARGE_RATIO;
+            float scaledW = w;
+            float scaledH = height / (width / w);
+            mScaleMode = 0;
+            mCurrentRatio = LARGE_RATIO;
+            if (scaledH > h) {
+                mScaleMode = 1;
+                scaledH = h;
+                scaledW = width / (height / h);
+            }
+            mStickerFilter.setSize(
+                new StickerFilter.Vec2(scaledW / mViewWidth, scaledH / mViewHeight));
+        }
+    }
+
+    public void scaleSize(float scale) {
+        if (mBitmap != null
+            && !mBitmap.isRecycled()
+            && mViewWidth > 0
+            && mViewHeight > 0
+            && mCurrentRatio != 0) {
+            int width = mBitmap.getWidth();
+            int height = mBitmap.getHeight();
+            float scaleRatio = mCurrentRatio * scale;
+            if (scaleRatio > 3.0f) {
+                scaleRatio = 3.0f;
+            } else if (scaleRatio < SMALL_RATIO) {
+                scaleRatio = SMALL_RATIO;
+            }
+            float w = mViewWidth * scaleRatio;
+            float h = mViewHeight * scaleRatio;
+            float scaledW = w;
+            float scaledH = h;
+            if (mScaleMode == 0) {
+                scaledW = w;
+                scaledH = height / (width / w);
+            } else {
+                scaledH = h;
+                scaledW = width / (height / h);
+            }
+            mCurrentRatio = scaleRatio;
+            mStickerFilter.setSize(
+                new StickerFilter.Vec2(scaledW / mViewWidth, scaledH / mViewHeight));
         }
     }
 
@@ -178,9 +221,6 @@ public class ImageRenderer extends BaseRenderer {
         }
         if (mDisplayFilter != null) {
             mDisplayFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
-            //int scaledHeight = (int) (mViewWidth * (1.0f * mTextureHeight / mTextureWidth));
-            //int x = 0;
-            //int y = (int) ((mViewHeight - scaledHeight) / 2.0f);
             mDisplayFilter.onDisplaySizeChanged(mViewWidth, mViewHeight);
         }
     }

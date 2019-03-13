@@ -3,11 +3,10 @@ package com.eyedog.aftereffect;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-
-import com.eyedog.aftereffect.player.ImageGLSurfaceView;
+import com.eyedog.aftereffect.player.ZoomSurfaceView;
 
 public class GLImageActivity extends AppCompatActivity {
-    ImageGLSurfaceView mSurfaceView;
+    ZoomSurfaceView mSurfaceView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
