@@ -22,7 +22,11 @@ import javax.microedition.khronos.opengles.GL10;
 public class ImageRenderer extends BaseRenderer {
     private final String TAG = "ImageRenderer";
 
-    protected StickerFilter mInputFilter;
+    private final float LARGE_RATIO = 0.7F;
+
+    private final float SMALL_RATIO = 0.4F;
+
+    protected StickerFilter mStickerFilter;
 
     protected GLImageFilter mDisplayFilter;
 
@@ -63,15 +67,15 @@ public class ImageRenderer extends BaseRenderer {
         int height = mBitmap.getHeight();
         int scaledWidth = width;
         int scaledHeight = height;
-        if (300 < width) {
-            scaledWidth = 300;
-            scaledHeight = (int) ((1.0f * 300 / width) * height);
+        mTextureWidth = 1080;
+        mTextureHeight = 1920;
+        if (160 < width) {
+            scaledWidth = 200;
+            scaledHeight = (int) (1.0f * scaledWidth / (1.0f * mTextureWidth / mTextureHeight));
         }
-        mTextureWidth = scaledWidth;
-        mTextureHeight = scaledHeight;
         mBlurBitmap =
             ImageUtils.blurBitmap(mSurfaceView.getContext(), mBitmap, scaledWidth, scaledHeight,
-                20);
+                25);
         synchronized (mLock) {
             mHasTextureChanged = true;
             if (mHasSurfaceCreated) {
@@ -112,9 +116,9 @@ public class ImageRenderer extends BaseRenderer {
         //如果onSurfaceChanged回调时bitmap还未被设置，需要在此设置滤镜参数
         changeTexture(false);
         int currentTexture = mInputTexture;
-        if (mInputFilter != null) {
-            currentTexture = mInputFilter.drawFrameBuffer(currentTexture, mVertexBuffer,
-                mTextureBuffer);
+        if (mStickerFilter != null) {
+            currentTexture =
+                mStickerFilter.drawFrameBuffer(currentTexture, mVertexBuffer, mTextureBuffer);
         }
         mDisplayFilter.drawFrame(currentTexture, mVertexBuffer, mTextureBuffer);
     }
@@ -124,12 +128,25 @@ public class ImageRenderer extends BaseRenderer {
             synchronized (mLock) {
                 if (mHasTextureChanged && mViewWidth > 0) {
                     mHasTextureChanged = false;
-                    if (mBitmap != null && !mBitmap.isRecycled()) {
-                        mInputTexture = OpenGLUtils.createTexture(mBitmap, mInputTexture);
-                    }
                     if (mBlurBitmap != null && !mBlurBitmap.isRecycled()) {
-                        mInputTexture2 = OpenGLUtils.createTexture(mBlurBitmap, mInputTexture2);
-                        mInputFilter.setStickerTextureId(mInputTexture2);
+                        mInputTexture = OpenGLUtils.createTexture(mBlurBitmap, mInputTexture);
+                    }
+                    if (mBitmap != null && !mBitmap.isRecycled()) {
+                        mInputTexture2 = OpenGLUtils.createTexture(mBitmap, mInputTexture2);
+                        int width = mBitmap.getWidth();
+                        int height = mBitmap.getHeight();
+                        mStickerFilter.setStickerTextureId(mInputTexture2);
+                        float w = mViewWidth * LARGE_RATIO;
+                        float h = mViewHeight * LARGE_RATIO;
+                        float scaledW = w;
+                        float scaledH = height / (width / w);
+                        if (scaledH > h) {
+                            scaledH = h;
+                            scaledW = width / (height / h);
+                        }
+                        mStickerFilter.setSize(
+                            new StickerFilter.Vec2((float) (scaledW / mViewWidth),
+                                (float) (scaledH / mViewHeight)));
                     }
                     onFilterSizeChanged();
                     if (mNeedRequestRender) {
@@ -141,10 +158,10 @@ public class ImageRenderer extends BaseRenderer {
     }
 
     private void initFilters() {
-        if (mInputFilter == null) {
-            mInputFilter = new StickerFilter(mSurfaceView.getContext());
+        if (mStickerFilter == null) {
+            mStickerFilter = new StickerFilter(mSurfaceView.getContext());
         } else {
-            mInputFilter.initProgramHandle();
+            mStickerFilter.initProgramHandle();
         }
         if (mDisplayFilter == null) {
             mDisplayFilter = new GLImageFilter(mSurfaceView.getContext());
@@ -154,10 +171,10 @@ public class ImageRenderer extends BaseRenderer {
     }
 
     private void onFilterSizeChanged() {
-        if (mInputFilter != null) {
-            mInputFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
-            mInputFilter.initFrameBuffer(mTextureWidth, mTextureHeight);
-            mInputFilter.onDisplaySizeChanged(mViewWidth, mViewHeight);
+        if (mStickerFilter != null) {
+            mStickerFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
+            mStickerFilter.initFrameBuffer(mTextureWidth, mTextureHeight);
+            mStickerFilter.onDisplaySizeChanged(mViewWidth, mViewHeight);
         }
         if (mDisplayFilter != null) {
             mDisplayFilter.onInputSizeChanged(mTextureWidth, mTextureHeight);
@@ -177,9 +194,9 @@ public class ImageRenderer extends BaseRenderer {
             mHasSurfaceCreated = false;
             mHasTextureChanged = false;
         }
-        if (mInputFilter != null) {
-            mInputFilter.release();
-            mInputFilter = null;
+        if (mStickerFilter != null) {
+            mStickerFilter.release();
+            mStickerFilter = null;
         }
         if (mDisplayFilter != null) {
             mDisplayFilter.release();

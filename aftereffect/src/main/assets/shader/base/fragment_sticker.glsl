@@ -1,4 +1,4 @@
- precision mediump float;
+ precision highp float;
  varying highp vec2 textureCoordinate;
  uniform sampler2D inputTexture; //backgournd texture
  uniform sampler2D inputImageTexture2; // sticker/foreground texture;
@@ -302,7 +302,8 @@ highp float lum(lowp vec3 c)
   }
  void main()
  {
-      lowp vec4 color = texture2D(inputTexture, textureCoordinate);
+      vec2 coordinate = vec2(textureCoordinate.x, 1.0 - textureCoordinate.y);
+      lowp vec4 color = texture2D(inputTexture, coordinate);
 
       vec2 coordinateToUse = vec2(textureCoordinate.x * aspectRatio, textureCoordinate.y);
       vec2 centerToUse = vec2(center.x * aspectRatio, center.y);
@@ -320,7 +321,7 @@ highp float lum(lowp vec3 c)
               //镜像
               coordinateToUse = vec2(1.0 - coordinateToUse.x, coordinateToUse.y);
           }
-
+          coordinateToUse = vec2(coordinateToUse.x,1.0 - coordinateToUse.y);
           lowp vec4 S = texture2D(inputImageTexture2, coordinateToUse);
           lowp vec4 D = color;
 

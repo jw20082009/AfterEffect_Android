@@ -1,6 +1,7 @@
 package com.eyedog.aftereffect.filters;
 
 import android.content.Context;
+import android.opengl.GLES20;
 import android.opengl.GLES30;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
 
@@ -32,11 +33,13 @@ public class StickerFilter extends GLImageFilter {
     protected float mC = 1f;
 
     public StickerFilter(Context context) {
-        this(context, VERTEX_SHADER, OpenGLUtils.getShaderFromAssets(context, "shader/base/fragment_sticker.glsl"));
+        this(context, VERTEX_SHADER,
+            OpenGLUtils.getShaderFromAssets(context, "shader/base/fragment_sticker.glsl"));
     }
 
     public StickerFilter(Context context, String vertexShader, String fragmentShader) {
         super(context, vertexShader, fragmentShader);
+        setTheta(0);
     }
 
     @Override
@@ -54,10 +57,6 @@ public class StickerFilter extends GLImageFilter {
             aspectRatio = GLES30.glGetUniformLocation(mProgramHandle, "aspectRatio");
             s = GLES30.glGetUniformLocation(mProgramHandle, "s");
             c = GLES30.glGetUniformLocation(mProgramHandle, "c");
-            setFloat(alpha, mAlpha);
-            setInteger(blendMode, mBlendMode);
-            setInteger(mirrorMode, mMirrorMode);
-            setFloat(aspectRatio, mAspectRatio);
         }
     }
 
@@ -73,6 +72,13 @@ public class StickerFilter extends GLImageFilter {
         if (mCenter != null) {
             GLES30.glUniform2f(center, mCenter.wRatio, mCenter.hRatio);
         }
+        GLES30.glUniform1f(aspectRatio, mAspectRatio);
+        GLES30.glUniform1f(alpha, mAlpha);
+        GLES30.glUniform1i(blendMode, mBlendMode);
+        GLES30.glUniform1i(mirrorMode, mMirrorMode);
+        GLES30.glUniform1f(theta, mTheta);
+        GLES30.glUniform1f(s, mS);
+        GLES30.glUniform1f(c, mC);
     }
 
     public void setStickerTextureId(int textureId) {
@@ -100,12 +106,9 @@ public class StickerFilter extends GLImageFilter {
         mTheta = degree;
         mS = (float) Math.sin(mTheta);
         mC = (float) Math.cos(mTheta);
-        setFloat(theta, mTheta);
-        setFloat(s, mS);
-        setFloat(c, mC);
     }
 
-    class Vec2 {
+    public static class Vec2 {
         public float wRatio;
         public float hRatio;
 

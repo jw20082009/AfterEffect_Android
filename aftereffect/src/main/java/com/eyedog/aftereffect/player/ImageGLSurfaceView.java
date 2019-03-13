@@ -29,7 +29,7 @@ public class ImageGLSurfaceView extends BaseGLSurfaceView {
         }
         Glide.with(getContext())
             .asBitmap()
-            .load(R.drawable.bt_1)
+            .load(R.drawable.camera_img)
             .into(new SimpleTarget<Bitmap>() {
                 @Override
                 public void onResourceReady(@NonNull Bitmap resource,
