@@ -1,14 +1,13 @@
 package com.eyedog.aftereffect.filters;
 
 import android.content.Context;
-import android.opengl.GLES20;
 import android.opengl.GLES30;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
 
 /**
  * created by jw200 at 2019/3/12 21:16
  **/
-public class StickerFilter extends GLImageFilter {
+public class SpStickerFilter extends GLImageFilter {
 
     protected int mInputTexture2Handle;//foreground texture
     protected int size;
@@ -32,12 +31,12 @@ public class StickerFilter extends GLImageFilter {
     protected float mS = 0f;
     protected float mC = 1f;
 
-    public StickerFilter(Context context) {
+    public SpStickerFilter(Context context) {
         this(context, VERTEX_SHADER,
             OpenGLUtils.getShaderFromAssets(context, "shader/base/fragment_sticker.glsl"));
     }
 
-    public StickerFilter(Context context, String vertexShader, String fragmentShader) {
+    public SpStickerFilter(Context context, String vertexShader, String fragmentShader) {
         super(context, vertexShader, fragmentShader);
         setTheta(0);
     }
@@ -110,6 +109,30 @@ public class StickerFilter extends GLImageFilter {
 
     @Override
     public void release() {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         super.release();
         if (mStickerTextureId != OpenGLUtils.GL_NOT_TEXTURE) {
             GLES30.glDeleteTextures(1, new int[] { mStickerTextureId }, 0);

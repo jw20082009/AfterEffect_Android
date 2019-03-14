@@ -3,10 +3,11 @@ package com.eyedog.aftereffect;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import com.eyedog.aftereffect.player.CameraGLSurfaceView;
+import com.eyedog.aftereffect.player.VideoGLSurfaceView;
 
 public class GLPlayerActivity extends AppCompatActivity {
 
-    CameraGLSurfaceView mCameraView;
+    VideoGLSurfaceView mCameraView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,5 +26,11 @@ public class GLPlayerActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mCameraView.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mCameraView.release();
     }
 }

@@ -165,7 +165,6 @@ public class CameraDev extends ThreadHandler {
             mCameraDevice.release();
             mCameraStatus = 0;
             mCameraDevice = null;
-            onDestroy();
         }
     }
 

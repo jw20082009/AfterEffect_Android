@@ -28,6 +28,9 @@ public class CameraGLSurfaceView extends BaseGLSurfaceView {
     public void onPause() {
         super.onPause();
         getRenderer().stopCamera();
+    }
+
+    public void release() {
         getRenderer().release();
     }
 

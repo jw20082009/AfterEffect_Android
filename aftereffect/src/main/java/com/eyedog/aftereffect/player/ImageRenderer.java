@@ -7,9 +7,7 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 
 import com.eyedog.aftereffect.filters.GLImageFilter;
-import com.eyedog.aftereffect.filters.GLImageGaussianBlurFilter;
-import com.eyedog.aftereffect.filters.GLImageInputFilter;
-import com.eyedog.aftereffect.filters.StickerFilter;
+import com.eyedog.aftereffect.filters.SpStickerFilter;
 import com.eyedog.aftereffect.utils.ImageUtils;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
 import com.eyedog.aftereffect.utils.TextureRotationUtils;
@@ -30,7 +28,7 @@ public class ImageRenderer extends BaseRenderer {
 
     private int mScaleMode = 0;//0:宽缩放；1:高缩放
 
-    protected StickerFilter mStickerFilter;
+    protected SpStickerFilter mStickerFilter;
 
     protected GLImageFilter mDisplayFilter;
 
@@ -165,7 +163,7 @@ public class ImageRenderer extends BaseRenderer {
                 scaledW = width / (height / h);
             }
             mStickerFilter.setSize(
-                new StickerFilter.Vec2(scaledW / mViewWidth, scaledH / mViewHeight));
+                new SpStickerFilter.Vec2(scaledW / mViewWidth, scaledH / mViewHeight));
         }
     }
 
@@ -196,13 +194,13 @@ public class ImageRenderer extends BaseRenderer {
             }
             mCurrentRatio = scaleRatio;
             mStickerFilter.setSize(
-                new StickerFilter.Vec2(scaledW / mViewWidth, scaledH / mViewHeight));
+                new SpStickerFilter.Vec2(scaledW / mViewWidth, scaledH / mViewHeight));
         }
     }
 
     private void initFilters() {
         if (mStickerFilter == null) {
-            mStickerFilter = new StickerFilter(mSurfaceView.getContext());
+            mStickerFilter = new SpStickerFilter(mSurfaceView.getContext());
         } else {
             mStickerFilter.initProgramHandle();
         }
