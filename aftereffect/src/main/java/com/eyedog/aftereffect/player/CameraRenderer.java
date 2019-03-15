@@ -7,7 +7,6 @@ import android.os.Looper;
 import android.util.Log;
 import com.eyedog.aftereffect.camera.CameraDev;
 import com.eyedog.aftereffect.camera.CameraHandler;
-import com.eyedog.aftereffect.utils.OpenGLUtils;
 
 /**
  * created by jw200 at 2019/3/9 20:20
@@ -19,36 +18,27 @@ public class CameraRenderer extends OesRenderer {
 
     protected CameraHandler mCallback;
 
+    private int mPreviewWidth, mPreviewHeight;
+
     CameraRenderer(GLSurfaceView surfaceView) {
         super(surfaceView);
         mCallback = new CameraCallback(Looper.getMainLooper());
         mCameraDev = new CameraDev(mCallback);
     }
 
-    @Override
-    protected void onSurfaceTextureCreated(SurfaceTexture surfaceTexture) {
-        super.onSurfaceTextureCreated(surfaceTexture);
-    }
-
     public void startCamera(int facing) {
         Log.i(TAG, "startCamera");
-        mIncomingSizeUpdated = false;
+        mHasInputSizeChanged = false;
         mCameraDev.startCamera(facing, 1080, 1920);
     }
 
     public void stopCamera() {
         Log.i(TAG, "stopCamera");
-        synchronized (lock) {
+        synchronized (mLock) {
             mSurfaceTexture = null;
         }
         mCameraDev.stopCamera();
         super.release();
-    }
-
-    @Override
-    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-        super.onFrameAvailable(surfaceTexture);
-        mSurfaceView.requestRender();
     }
 
     class CameraCallback extends CameraHandler {
@@ -64,14 +54,14 @@ public class CameraRenderer extends OesRenderer {
         protected void handleStartSuccess(int previewWidth, int previewHeight, int pictureWidth,
             int pictureHeight) {
             Log.i(TAG, "handleStartSuccess");
-            synchronized (lock) {
-                if (mIncomingWidth != previewWidth || mIncomingHeight != previewHeight) {
+            synchronized (mLock) {
+                if (mPreviewWidth != previewWidth || mPreviewHeight != previewHeight) {
                     if (previewWidth > previewHeight) {
-                        mIncomingWidth = previewHeight;
-                        mIncomingHeight = previewWidth;
+                        mPreviewWidth = previewHeight;
+                        mPreviewHeight = previewWidth;
                     } else {
-                        mIncomingWidth = previewWidth;
-                        mIncomingHeight = previewHeight;
+                        mPreviewWidth = previewWidth;
+                        mPreviewHeight = previewHeight;
                     }
                 }
                 if (mSurfaceTexture != null) {
@@ -85,7 +75,7 @@ public class CameraRenderer extends OesRenderer {
         @Override
         protected void handleStartPreview() {
             Log.i(TAG, "handleStartPreview");
-            setIncomingSize(mIncomingWidth, mIncomingHeight);
+            onInputSizeChanged(mPreviewWidth, mPreviewHeight);
         }
     }
 

@@ -1,9 +1,8 @@
 package com.eyedog.aftereffect.player;
 
-import android.content.Context;
 import android.graphics.SurfaceTexture;
-import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 import com.eyedog.aftereffect.filters.GLImageFilter;
 import com.eyedog.aftereffect.filters.GLImageOESInputFilter;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
@@ -16,130 +15,78 @@ import javax.microedition.khronos.opengles.GL10;
  * created by jw200 at 2019/3/14 16:27
  **/
 public class OesRenderer extends BaseRenderer implements SurfaceTexture.OnFrameAvailableListener {
+    private final String TAG = "OesRenderer";
     protected int mTextureId;
 
     protected SurfaceTexture mSurfaceTexture;
 
-    protected Object lock = new Object();
-
-    protected int mIncomingWidth, mIncomingHeight, mSurfaceWidth, mSurfaceHeight;
-
     protected final float[] mSTMatrix = new float[16];
-
-    protected GLImageFilter mOutFilter;
-
-    protected GLImageOESInputFilter mInputFilter;
-
-    protected FloatBuffer mVertexBuffer;
-
-    protected FloatBuffer mTextureBuffer;
 
     // 用于显示裁剪的纹理顶点缓冲
     protected FloatBuffer mDisplayVertexBuffer;
 
     protected FloatBuffer mDisplayTextureBuffer;
 
-    protected boolean mIncomingSizeUpdated;
-
     protected CameraRenderer.ScaleType mScaleType = CameraRenderer.ScaleType.CENTER_CROP;
 
     public OesRenderer(GLSurfaceView surfaceView) {
         super(surfaceView);
+        mDisplayVertexBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.CubeVertices);
+        mDisplayTextureBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.TextureVertices);
     }
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         super.onSurfaceCreated(gl, config);
-        GLES30.glDisable(GLES30.GL_DEPTH_TEST);
-        GLES30.glDisable(GLES30.GL_CULL_FACE);
-        synchronized (lock) {
-            mTextureId = createTextureObject();
-            mSurfaceTexture = new SurfaceTexture(mTextureId);
-            mSurfaceTexture.setOnFrameAvailableListener(this);
-            onSurfaceTextureCreated(mSurfaceTexture);
-            initBuffers();
-            initFilters(mSurfaceView.getContext());
-        }
-    }
-
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        super.onSurfaceChanged(gl, width, height);
-        mSurfaceWidth = width;
-        mSurfaceHeight = height;
-        if (mIncomingSizeUpdated) {
-            synchronized (lock) {
-                if (mIncomingSizeUpdated) {
-                    adjustCoordinateSize();
-                    onFilterChanged();
-                    mIncomingSizeUpdated = false;
-                }
+        synchronized (mLock) {
+            mTextureId = createInputTexture();
+            if (mTextureId != OpenGLUtils.GL_NOT_TEXTURE) {
+                mSurfaceTexture = new SurfaceTexture(mTextureId);
+                mSurfaceTexture.setOnFrameAvailableListener(this);
+                onSurfaceTextureCreated(mSurfaceTexture);
+            } else {
+                Log.i(TAG, "createInputTexture failed");
             }
         }
     }
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        super.onDrawFrame(gl);
-        mSurfaceTexture.updateTexImage();
-        if (mIncomingSizeUpdated) {
-            synchronized (lock) {
-                if (mIncomingSizeUpdated) {
-                    adjustCoordinateSize();
-                    onFilterChanged();
-                    mIncomingSizeUpdated = false;
-                }
-            }
-        }
         mSurfaceTexture.getTransformMatrix(mSTMatrix);
-        mInputFilter.setTextureTransformMatrix(mSTMatrix);
-        int currentTextureId = mInputFilter.drawFrameBuffer(mTextureId, mVertexBuffer,
-            mTextureBuffer);
-        mOutFilter.drawFrame(currentTextureId, mDisplayVertexBuffer, mDisplayTextureBuffer);
+        ((GLImageOESInputFilter)mInputFilter).setTextureTransformMatrix(mSTMatrix);
+        super.onDrawFrame(gl);
     }
 
-    protected void setIncomingSize(int incomingWidth, int incomingHeight) {
-        synchronized (lock) {
-            mIncomingSizeUpdated = true;
-            mIncomingWidth = incomingWidth;
-            mIncomingHeight = incomingHeight;
+    @Override
+    public int createInputTexture() {
+        mTextureId = OpenGLUtils.createOESTexture();
+        return mTextureId;
+    }
+
+    @Override
+    protected GLImageOESInputFilter initInputFilter() {
+        if (mInputFilter == null) {
+            mInputFilter = new GLImageOESInputFilter(mSurfaceView.getContext());
+        } else {
+            mInputFilter.initProgramHandle();
         }
+        return (GLImageOESInputFilter) mInputFilter;
     }
 
     protected void onSurfaceTextureCreated(SurfaceTexture surfaceTexture) {
     }
 
-    protected void initBuffers() {
-        releaseBuffers();
-        mDisplayVertexBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.CubeVertices);
-        mDisplayTextureBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.TextureVertices);
-        mVertexBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.CubeVertices);
-        mTextureBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.TextureVertices);
-    }
-
-    protected void initFilters(Context context) {
-        releaseFilters();
-        mInputFilter = new GLImageOESInputFilter(context);
-        mOutFilter = new GLImageFilter(context);
-    }
-
-    protected void onFilterChanged() {
-        if (mInputFilter != null) {
-            mInputFilter.onInputSizeChanged(mIncomingWidth, mIncomingHeight);
-            mInputFilter.initFrameBuffer(mIncomingWidth, mIncomingHeight);
-            mInputFilter.onDisplaySizeChanged(mSurfaceWidth, mSurfaceHeight);
-        }
-        if (mOutFilter != null) {
-            mOutFilter.onInputSizeChanged(mIncomingWidth, mIncomingHeight);
-            mOutFilter.onDisplaySizeChanged(mSurfaceWidth, mSurfaceHeight);
-        }
+    @Override
+    protected void onChildFilterSizeChanged() {
+        super.onChildFilterSizeChanged();
+        adjustCoordinateSize();
     }
 
     protected void adjustCoordinateSize() {
         int mViewWidth = mSurfaceWidth;
         int mViewHeight = mSurfaceHeight;
-        int mTextureWidth = mIncomingWidth;
-        int mTextureHeight = mIncomingHeight;
+        int mTextureWidth = mIncommingWidth;
+        int mTextureHeight = mIncommingHeight;
         float[] textureCoord = null;
         float[] vertexCoord = null;
         float[] textureVertices = TextureRotationUtils.TextureVertices;
@@ -192,26 +139,9 @@ public class OesRenderer extends BaseRenderer implements SurfaceTexture.OnFrameA
         return coordinate == 0.0f ? distance : 1 - distance;
     }
 
-    protected void releaseFilters() {
-        if (mInputFilter != null) {
-            mInputFilter.release();
-            mInputFilter = null;
-        }
-        if (mOutFilter != null) {
-            mOutFilter.release();
-            mOutFilter = null;
-        }
-    }
-
-    protected void releaseBuffers() {
-        if (mVertexBuffer != null) {
-            mVertexBuffer.clear();
-            mVertexBuffer = null;
-        }
-        if (mTextureBuffer != null) {
-            mTextureBuffer.clear();
-            mTextureBuffer = null;
-        }
+    @Override
+    protected void release() {
+        super.release();
         if (mDisplayVertexBuffer != null) {
             mDisplayVertexBuffer.clear();
             mDisplayVertexBuffer = null;
@@ -222,17 +152,9 @@ public class OesRenderer extends BaseRenderer implements SurfaceTexture.OnFrameA
         }
     }
 
-    public void release() {
-        releaseBuffers();
-        releaseFilters();
-    }
-
-    protected int createTextureObject() {
-        return OpenGLUtils.createOESTexture();
-    }
-
     @Override
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-
+        Log.i(TAG, "onDrawFrame");
+        mSurfaceView.requestRender();
     }
 }
