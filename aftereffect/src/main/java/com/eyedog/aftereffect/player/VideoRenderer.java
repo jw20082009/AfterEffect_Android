@@ -7,6 +7,7 @@ import android.media.MediaPlayer;
 import android.opengl.GLSurfaceView;
 import android.view.Surface;
 import java.io.IOException;
+import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
@@ -19,7 +20,6 @@ public class VideoRenderer extends OesRenderer implements SurfaceTexture.OnFrame
 
     public VideoRenderer(GLSurfaceView surfaceView) {
         super(surfaceView);
-        initMediaPlayer();
     }
 
     @Override
@@ -30,15 +30,14 @@ public class VideoRenderer extends OesRenderer implements SurfaceTexture.OnFrame
     }
 
     @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        initMediaPlayer();
+        super.onSurfaceCreated(gl, config);
+    }
+
+    @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         super.onSurfaceChanged(gl, width, height);
-        mediaPlayer.prepareAsync();
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mediaPlayer) {
-                mediaPlayer.start();
-            }
-        });
     }
 
     private void initMediaPlayer() {
@@ -54,6 +53,13 @@ public class VideoRenderer extends OesRenderer implements SurfaceTexture.OnFrame
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setLooping(true);
         mediaPlayer.setOnVideoSizeChangedListener(this);
+        mediaPlayer.prepareAsync();
+        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mediaPlayer) {
+                mediaPlayer.start();
+            }
+        });
     }
 
     @Override
@@ -64,5 +70,11 @@ public class VideoRenderer extends OesRenderer implements SurfaceTexture.OnFrame
     @Override
     public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
         setIncomingSize(width, height);
+    }
+
+    @Override
+    public void release() {
+        super.release();
+        mediaPlayer.release();
     }
 }
