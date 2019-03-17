@@ -1,3 +1,4 @@
+
 package com.eyedog.aftereffect.player;
 
 import android.content.res.AssetFileDescriptor;
@@ -5,21 +6,23 @@ import android.graphics.SurfaceTexture;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 import android.view.Surface;
+
 import com.eyedog.aftereffect.filters.SpStickerFilter;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
+
 import java.io.IOException;
 import java.nio.FloatBuffer;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 
 /**
  * created by jw200 at 2019/3/13 16:05
  **/
-public class VideoRenderer extends OesRenderer implements SurfaceTexture.OnFrameAvailableListener,
-    MediaPlayer.OnVideoSizeChangedListener {
+public class VideoRenderer extends OesRenderer implements MediaPlayer.OnVideoSizeChangedListener {
     private static final String TAG = "VideoRenderer";
+
     private MediaPlayer mediaPlayer;
+
     protected SpStickerFilter mStickerFilter;
 
     public VideoRenderer(GLSurfaceView surfaceView) {
@@ -33,24 +36,12 @@ public class VideoRenderer extends OesRenderer implements SurfaceTexture.OnFrame
         mediaPlayer.setSurface(surface);
     }
 
-    @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        initMediaPlayer();
-        super.onSurfaceCreated(gl, config);
-    }
-
-    @Override
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
-        super.onSurfaceChanged(gl, width, height);
-    }
-
     private void initMediaPlayer() {
         mediaPlayer = new MediaPlayer();
         try {
-            AssetFileDescriptor afd =
-                mSurfaceView.getContext().getAssets().openFd("camera_test.mp4");
+            AssetFileDescriptor afd = mSurfaceView.getContext().getAssets().openFd("video.mp4");
             mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(),
-                afd.getLength());
+                    afd.getLength());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -68,28 +59,30 @@ public class VideoRenderer extends OesRenderer implements SurfaceTexture.OnFrame
 
     @Override
     protected int onDrawFrameBuffer(int textureId, FloatBuffer vertexBuffer,
-        FloatBuffer textureBuffer) {
+            FloatBuffer textureBuffer) {
         int currentTexture = OpenGLUtils.GL_NOT_TEXTURE;
         if (mStickerFilter != null) {
-            currentTexture =
-                mStickerFilter.drawFrameBuffer(textureId, mVertexBuffer, mTextureBuffer);
+            currentTexture = mStickerFilter.drawFrameBuffer(textureId, mVertexBuffer,
+                    mTextureBuffer);
         }
         return currentTexture;
     }
 
     @Override
-    synchronized public void onFrameAvailable(SurfaceTexture surface) {
-        mSurfaceView.requestRender();
-    }
-
-    @Override
     public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+        Log.i(TAG, "onVideoSizeChanged " + width + "*" + height);
         onInputSizeChanged(width, height);
     }
 
-    @Override
-    public void release() {
-        super.release();
+    public void startPlay() {
+        initMediaPlayer();
+    }
+
+    public void stopPlay() {
+        Log.i(TAG, "stopCamera");
+        synchronized (mLock) {
+            mSurfaceTexture = null;
+        }
         mediaPlayer.release();
     }
 }

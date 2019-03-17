@@ -1,3 +1,4 @@
+
 package com.eyedog.aftereffect.player;
 
 import android.content.Context;
@@ -25,11 +26,24 @@ public class VideoGLSurfaceView extends BaseGLSurfaceView {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        getRenderer().startPlay();
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
-        getRenderer().release();
+        getRenderer().stopPlay();
+        release();
     }
 
     public void release() {
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                getRenderer().release();
+            }
+        });
     }
 }

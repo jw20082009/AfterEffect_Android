@@ -6,6 +6,7 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Message;
+import android.util.Log;
 
 import com.eyedog.aftereffect.utils.CameraSizeUtils;
 import com.eyedog.basic.handler.ThreadHandler;
@@ -17,6 +18,8 @@ import java.util.List;
  * created by jw200 at 2019/3/9 14:46
  **/
 public class CameraDev extends ThreadHandler {
+    private final String TAG = "CameraDev";
+
     private final int MSG_START_CAMERA = 0X01;
 
     private final int MSG_START_PREVIEW = 0x02;
@@ -52,6 +55,7 @@ public class CameraDev extends ThreadHandler {
     private int mPreviewHeight;
 
     public CameraDev(CameraHandler callback) {
+        super();
         this.mCallback = callback;
     }
 
@@ -77,6 +81,8 @@ public class CameraDev extends ThreadHandler {
         super.handleThreadMessage(msg);
         switch (msg.what) {
             case MSG_START_CAMERA:
+                Log.i(TAG, "MSG_START_CAMERA " + mCameraStatus + ";"
+                        + (msg.obj == null ? "msg.obj == null" : ""));
                 if (mCameraStatus == 0 && msg.obj != null) {
                     mPreferPreviewWidth = msg.arg1;
                     mPreferPreviewHeight = msg.arg2;

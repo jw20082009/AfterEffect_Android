@@ -3,12 +3,14 @@ package com.eyedog.aftereffect.player;
 
 import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
-
 import android.util.Log;
+
 import com.eyedog.aftereffect.filters.GLImageFilter;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
 import com.eyedog.aftereffect.utils.TextureRotationUtils;
+
 import java.nio.FloatBuffer;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
@@ -17,22 +19,31 @@ import javax.microedition.khronos.opengles.GL10;
  **/
 public abstract class BaseRenderer implements GLSurfaceView.Renderer {
     private final String TAG = "BaseRenderer";
+
     protected GLSurfaceView mSurfaceView;
+
     protected GLImageFilter mInputFilter;
+
     protected GLImageFilter mOutputFilter;
 
     protected FloatBuffer mVertexBuffer;
+
     protected FloatBuffer mTextureBuffer;
+
     protected int mInputTexture = OpenGLUtils.GL_NOT_TEXTURE;
+
     protected int mIncommingWidth, mIncommingHeight;
+
     protected int mSurfaceWidth, mSurfaceHeight;
+
     protected boolean mHasInputSizeChanged = false, mHasSurfaceChanged = false;
+
     protected Object mLock = new Object();
+
+    private boolean mHasFrameBufferInited = false;
 
     public BaseRenderer(GLSurfaceView surfaceView) {
         this.mSurfaceView = surfaceView;
-        mVertexBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.CubeVertices);
-        mTextureBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.TextureVertices);
         mHasSurfaceChanged = false;
     }
 
@@ -40,6 +51,8 @@ public abstract class BaseRenderer implements GLSurfaceView.Renderer {
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         mInputFilter = initInputFilter();
         mOutputFilter = initOutputFilter();
+        mVertexBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.CubeVertices);
+        mTextureBuffer = OpenGLUtils.createFloatBuffer(TextureRotationUtils.TextureVertices);
     }
 
     @Override
@@ -56,27 +69,31 @@ public abstract class BaseRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        Log.i(TAG, "onDrawFrame");
         onFilterSizeChanged();
-        Log.i(TAG, "onDrawFrame22");
-        if (mInputTexture != OpenGLUtils.GL_NOT_TEXTURE) {
+        beforeDrawFrame();
+        if (mInputTexture != OpenGLUtils.GL_NOT_TEXTURE && mHasFrameBufferInited) {
             int currentTexture = mInputTexture;
             if (mInputFilter != null) {
-                currentTexture =
-                    mInputFilter.drawFrameBuffer(currentTexture, mVertexBuffer, mTextureBuffer);
+                currentTexture = mInputFilter.drawFrameBuffer(currentTexture, mVertexBuffer,
+                        mTextureBuffer);
             }
             int nextTextureId = onDrawFrameBuffer(currentTexture, mVertexBuffer, mTextureBuffer);
             if (nextTextureId != OpenGLUtils.GL_NOT_TEXTURE) {
                 currentTexture = nextTextureId;
             }
             mOutputFilter.drawFrame(currentTexture, mVertexBuffer, mTextureBuffer);
+        } else {
+            Log.e(TAG, "onDrawFrame GL_NOT_TEXTURE");
         }
-        Log.i(TAG, "onDrawFrame33");
     }
 
     protected int onDrawFrameBuffer(int textureId, FloatBuffer vertexBuffer,
-        FloatBuffer textureBuffer) {
+            FloatBuffer textureBuffer) {
         return OpenGLUtils.GL_NOT_TEXTURE;
+    }
+
+    protected void beforeDrawFrame() {
+
     }
 
     public abstract int createInputTexture();
@@ -100,7 +117,6 @@ public abstract class BaseRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onInputSizeChanged(int width, int height) {
-        Log.i(TAG, "onInputSizeChanged:" + width + "*" + height);
         synchronized (mLock) {
             mHasInputSizeChanged = true;
             mIncommingWidth = width;
@@ -113,7 +129,7 @@ public abstract class BaseRenderer implements GLSurfaceView.Renderer {
             synchronized (mLock) {
                 if (mHasInputSizeChanged) {
                     mHasInputSizeChanged = false;
-                    Log.i(TAG, "onFilterSizeChanged " + mIncommingWidth + "*" + mIncommingHeight);
+                    mHasFrameBufferInited = true;
                     onChildFilterSizeChanged();
                     if (mInputFilter != null) {
                         mInputFilter.onInputSizeChanged(mIncommingWidth, mIncommingHeight);
@@ -122,7 +138,6 @@ public abstract class BaseRenderer implements GLSurfaceView.Renderer {
                     if (mOutputFilter != null) {
                         mOutputFilter.onInputSizeChanged(mIncommingWidth, mIncommingHeight);
                     }
-                    Log.i(TAG, "onFilterSizeChanged22 " + mIncommingWidth + "*" + mIncommingHeight);
                 }
             }
         }
@@ -132,7 +147,6 @@ public abstract class BaseRenderer implements GLSurfaceView.Renderer {
     }
 
     protected void onDisplaySizeChanged(int width, int height) {
-        Log.i(TAG, "onDisplaySizeChanged:" + width + "*" + height);
         if (mOutputFilter != null) {
             mOutputFilter.onDisplaySizeChanged(width, height);
         }
@@ -142,10 +156,10 @@ public abstract class BaseRenderer implements GLSurfaceView.Renderer {
     }
 
     protected void release() {
-        Log.i(TAG, "release:");
         synchronized (mLock) {
             mHasInputSizeChanged = false;
             mHasSurfaceChanged = false;
+            mHasFrameBufferInited = false;
         }
         if (mInputFilter != null) {
             mInputFilter.release();
