@@ -6,7 +6,7 @@
     tools:context=".GLPlayerActivity"
     >
 
-    <com.eyedog.aftereffect.player.CameraGLSurfaceView
+    <com.eyedog.aftereffect.player.VideoGLSurfaceView
         android:id="@+id/camera_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

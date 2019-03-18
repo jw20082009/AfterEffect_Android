@@ -31,6 +31,8 @@ public class OesRenderer extends BaseRenderer implements SurfaceTexture.OnFrameA
 
     protected ScaleType mScaleType = ScaleType.CENTER_CROP;
 
+    protected boolean mHasTextureCreated = false;
+
     public OesRenderer(GLSurfaceView surfaceView) {
         super(surfaceView);
     }
@@ -44,6 +46,7 @@ public class OesRenderer extends BaseRenderer implements SurfaceTexture.OnFrameA
             mInputTexture = createInputTexture();
             if (mInputTexture != OpenGLUtils.GL_NOT_TEXTURE) {
                 mSurfaceTexture = new SurfaceTexture(mInputTexture);
+                mHasTextureCreated = true;
                 mSurfaceTexture.setOnFrameAvailableListener(this);
                 onSurfaceTextureCreated(mSurfaceTexture);
             } else {
@@ -100,7 +103,7 @@ public class OesRenderer extends BaseRenderer implements SurfaceTexture.OnFrameA
         float[] textureVertices = TextureRotationUtils.TextureVertices;
         float[] vertexVertices = TextureRotationUtils.CubeVertices;
         float ratioMax = Math.max((float) mViewWidth / mTextureWidth,
-                (float) mViewHeight / mTextureHeight);
+            (float) mViewHeight / mTextureHeight);
         // 新的宽高
         int imageWidth = Math.round(mTextureWidth * ratioMax);
         int imageHeight = Math.round(mTextureHeight * ratioMax);
@@ -109,25 +112,25 @@ public class OesRenderer extends BaseRenderer implements SurfaceTexture.OnFrameA
         float ratioHeight = (float) imageHeight / (float) mViewHeight;
         if (mScaleType == ScaleType.CENTER_INSIDE) {
             vertexCoord = new float[] {
-                    vertexVertices[0] / ratioHeight, vertexVertices[1] / ratioWidth,
-                    vertexVertices[2], vertexVertices[3] / ratioHeight,
-                    vertexVertices[4] / ratioWidth, vertexVertices[5],
-                    vertexVertices[6] / ratioHeight, vertexVertices[7] / ratioWidth,
-                    vertexVertices[8], vertexVertices[9] / ratioHeight,
-                    vertexVertices[10] / ratioWidth, vertexVertices[11],
+                vertexVertices[0] / ratioHeight, vertexVertices[1] / ratioWidth,
+                vertexVertices[2], vertexVertices[3] / ratioHeight,
+                vertexVertices[4] / ratioWidth, vertexVertices[5],
+                vertexVertices[6] / ratioHeight, vertexVertices[7] / ratioWidth,
+                vertexVertices[8], vertexVertices[9] / ratioHeight,
+                vertexVertices[10] / ratioWidth, vertexVertices[11],
             };
         } else if (mScaleType == ScaleType.CENTER_CROP) {
             float distHorizontal = (1 - 1 / ratioWidth) / 2;
             float distVertical = (1 - 1 / ratioHeight) / 2;
             textureCoord = new float[] {
-                    addDistance(textureVertices[0], distVertical),
-                    addDistance(textureVertices[1], distHorizontal),
-                    addDistance(textureVertices[2], distVertical),
-                    addDistance(textureVertices[3], distHorizontal),
-                    addDistance(textureVertices[4], distVertical),
-                    addDistance(textureVertices[5], distHorizontal),
-                    addDistance(textureVertices[6], distVertical),
-                    addDistance(textureVertices[7], distHorizontal),
+                addDistance(textureVertices[0], distVertical),
+                addDistance(textureVertices[1], distHorizontal),
+                addDistance(textureVertices[2], distVertical),
+                addDistance(textureVertices[3], distHorizontal),
+                addDistance(textureVertices[4], distVertical),
+                addDistance(textureVertices[5], distHorizontal),
+                addDistance(textureVertices[6], distVertical),
+                addDistance(textureVertices[7], distHorizontal),
             };
         }
         if (vertexCoord == null) {
@@ -150,6 +153,9 @@ public class OesRenderer extends BaseRenderer implements SurfaceTexture.OnFrameA
     @Override
     protected void release() {
         super.release();
+        synchronized (mLock) {
+            mHasTextureCreated = false;
+        }
         if (mDisplayVertexBuffer != null) {
             mDisplayVertexBuffer.clear();
             mDisplayVertexBuffer = null;

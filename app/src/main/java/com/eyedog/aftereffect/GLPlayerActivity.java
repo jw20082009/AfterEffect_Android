@@ -7,7 +7,7 @@ import com.eyedog.aftereffect.player.VideoGLSurfaceView;
 
 public class GLPlayerActivity extends AppCompatActivity {
 
-    CameraGLSurfaceView mCameraView;
+    VideoGLSurfaceView mCameraView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

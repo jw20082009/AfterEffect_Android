@@ -109,30 +109,6 @@ public class SpStickerFilter extends GLImageFilter {
 
     @Override
     public void release() {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         super.release();
         if (mStickerTextureId != OpenGLUtils.GL_NOT_TEXTURE) {
             GLES30.glDeleteTextures(1, new int[] { mStickerTextureId }, 0);
