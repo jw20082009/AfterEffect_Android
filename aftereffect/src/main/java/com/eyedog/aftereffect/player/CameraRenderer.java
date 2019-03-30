@@ -8,6 +8,10 @@ import android.util.Log;
 
 import com.eyedog.aftereffect.camera.CameraDev;
 import com.eyedog.aftereffect.camera.CameraHandler;
+import com.eyedog.aftereffect.filters.SpSwirlFilter;
+import com.eyedog.aftereffect.utils.OpenGLUtils;
+import java.nio.FloatBuffer;
+import javax.microedition.khronos.opengles.GL10;
 
 /**
  * created by jw200 at 2019/3/9 20:20
@@ -18,6 +22,8 @@ public class CameraRenderer extends OesRenderer {
     protected CameraDev mCameraDev;
 
     protected CameraHandler mCallback;
+
+    protected SpSwirlFilter mSwirlFilter;
 
     private int mPreviewWidth, mPreviewHeight;
 
@@ -34,7 +40,7 @@ public class CameraRenderer extends OesRenderer {
             mHasInputSizeChanged = false;
             mHasCameraOpened = false;
         }
-        mCameraDev.startCamera(facing, 1080, 1920);
+        mCameraDev.startCamera(facing, 1080, 1920, 1080, 1920);
     }
 
     public void stopCamera() {
@@ -46,6 +52,18 @@ public class CameraRenderer extends OesRenderer {
     }
 
     @Override
+    protected int onDrawFrameBuffer(int textureId, FloatBuffer vertexBuffer,
+        FloatBuffer textureBuffer) {
+        int bufferTextureId = super.onDrawFrameBuffer(textureId, vertexBuffer, textureBuffer);
+        if (mSwirlFilter != null) {
+            bufferTextureId = mSwirlFilter.drawFrameBuffer(
+                bufferTextureId == OpenGLUtils.GL_NOT_TEXTURE ? textureId : bufferTextureId,
+                vertexBuffer, textureBuffer);
+        }
+        return bufferTextureId;
+    }
+
+    @Override
     protected void onSurfaceTextureCreated(SurfaceTexture surfaceTexture) {
         super.onSurfaceTextureCreated(surfaceTexture);
         if (mHasCameraOpened && surfaceTexture != null) {
@@ -54,6 +72,14 @@ public class CameraRenderer extends OesRenderer {
                     mCameraDev.startPreview(mSurfaceTexture);
                 }
             }
+        }
+    }
+
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        super.onSurfaceChanged(gl, width, height);
+        if (mSwirlFilter != null) {
+            mSwirlFilter.onDisplaySizeChanged(width, height);
         }
     }
 
@@ -69,7 +95,7 @@ public class CameraRenderer extends OesRenderer {
 
         @Override
         protected void handleStartSuccess(int previewWidth, int previewHeight, int pictureWidth,
-                int pictureHeight) {
+            int pictureHeight) {
             synchronized (mLock) {
                 if (mPreviewWidth != previewWidth || mPreviewHeight != previewHeight) {
                     if (previewWidth > previewHeight) {
@@ -95,8 +121,23 @@ public class CameraRenderer extends OesRenderer {
     }
 
     @Override
+    protected void onChildFilterSizeChanged() {
+        super.onChildFilterSizeChanged();
+        mSwirlFilter = new SpSwirlFilter(mSurfaceView.getContext());
+        mSwirlFilter.onInputSizeChanged(mIncommingWidth, mIncommingHeight);
+        mSwirlFilter.initFrameBuffer(mIncommingWidth, mIncommingHeight);
+        if (mSurfaceWidth > 0 && mSurfaceHeight > 0) {
+            mSwirlFilter.onDisplaySizeChanged(mSurfaceWidth, mSurfaceHeight);
+        }
+    }
+
+    @Override
     public void release() {
         super.release();
         mCameraDev.onDestroy();
+        if (mSwirlFilter != null) {
+            mSwirlFilter.release();
+            mSwirlFilter = null;
+        }
     }
 }

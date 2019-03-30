@@ -2,7 +2,10 @@
 package com.eyedog.aftereffect.player;
 
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.opengl.GLSurfaceView;
+import android.support.annotation.NonNull;
+import android.support.v7.graphics.Palette;
 import com.eyedog.aftereffect.filters.SpStickerFilter;
 import com.eyedog.aftereffect.utils.ImageUtils;
 import com.eyedog.aftereffect.utils.OpenGLUtils;
@@ -42,6 +45,22 @@ public class ImageRenderer extends BaseRenderer {
         mBlurBitmap =
             ImageUtils.blurBitmap(mSurfaceView.getContext(), mBitmap, scaledWidth, scaledHeight,
                 25);
+        new Palette.Builder(mBitmap).generate(
+            new Palette.PaletteAsyncListener() {
+                @Override
+                public void onGenerated(@NonNull Palette palette) {
+                    Palette.Swatch swatch = palette.getDominantSwatch();
+                    int rgb = swatch.getRgb();
+                    int red = Color.red(rgb);
+                    int green = Color.green(rgb);
+                    int blue = Color.blue(rgb);
+                    ((SpStickerFilter) mInputFilter).setBlendColor(
+                        new float[] { red / 255f, green / 255f, blue / 255f, 0.4f });
+                    //if (mHasInputSizeChanged) {
+                        mSurfaceView.requestRender();
+                    //}
+                }
+            });
         synchronized (mLock) {
             if (mHasSurfaceChanged) {
                 mSurfaceView.requestRender();

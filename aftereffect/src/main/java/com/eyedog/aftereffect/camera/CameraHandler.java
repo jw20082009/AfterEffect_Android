@@ -22,7 +22,7 @@ public abstract class CameraHandler extends Handler {
     }
 
     public void startSuccess(int previewWidth, int previewHeight, int pictureWidth,
-            int pictureHeight) {
+        int pictureHeight) {
         Bundle data = new Bundle();
         data.putInt("previewWidth", previewWidth);
         data.putInt("previewHeight", previewHeight);
@@ -53,7 +53,7 @@ public abstract class CameraHandler extends Handler {
                 int pictureHeight = data.getInt("pictureHeight");
                 handleStartSuccess(previewWidth, previewHeight, pictureWidth, pictureHeight);
             }
-                break;
+            break;
             case MSG_CAMERA_START_FAILED: {
                 String errorMsg = null;
                 if (msg.obj != null) {
@@ -61,7 +61,7 @@ public abstract class CameraHandler extends Handler {
                 }
                 handleStartFailed(errorMsg);
             }
-                break;
+            break;
             case MSG_CAMERA_START_PREVIEW:
                 handleStartPreview();
                 break;
@@ -71,7 +71,7 @@ public abstract class CameraHandler extends Handler {
     protected abstract void handleStartFailed(String errorMsg);
 
     protected abstract void handleStartSuccess(int previewWidth, int previewHeight,
-            int pictureWidth, int pictureHeight);
+        int pictureWidth, int pictureHeight);
 
     protected abstract void handleStartPreview();
 }

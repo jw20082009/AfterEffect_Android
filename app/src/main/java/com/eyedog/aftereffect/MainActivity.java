@@ -25,4 +25,14 @@ public class MainActivity extends AppCompatActivity {
     public void startGLImage(View view) {
         startActivity(new Intent(this, GLImageActivity.class));
     }
+
+    public void audioMix(View view) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                VideoClipJni.audioMix("/sdcard/audio/1553863788514.aac", "",
+                    "/sdcard/audio/audioOut.aac");
+            }
+        }).start();
+    }
 }

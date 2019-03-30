@@ -169,7 +169,10 @@ public class VideoRenderer extends OesRenderer implements MediaPlayer.OnVideoSiz
         synchronized (mLock) {
             mSurfaceTexture = null;
         }
-        mediaPlayer.release();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
 
     @Override

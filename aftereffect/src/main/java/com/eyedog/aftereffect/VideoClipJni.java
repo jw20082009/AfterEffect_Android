@@ -9,4 +9,6 @@ public class VideoClipJni {
     }
 
     public static native String sayHello(String name);
+
+    public static native int audioMix(String audio1, String audio2, String audioOut);
 }

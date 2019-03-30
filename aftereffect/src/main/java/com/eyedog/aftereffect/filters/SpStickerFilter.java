@@ -19,6 +19,7 @@ public class SpStickerFilter extends GLImageFilter {
     protected int aspectRatio;
     protected int s;
     protected int c;
+    protected int blendColor;
 
     protected int mStickerTextureId = OpenGLUtils.GL_NOT_TEXTURE;
     protected Vec2 mSize = new Vec2(0.7f, 0.5f);
@@ -30,6 +31,7 @@ public class SpStickerFilter extends GLImageFilter {
     protected float mAspectRatio = 1.0f;
     protected float mS = 0f;
     protected float mC = 1f;
+    protected float[] mBlendColor = new float[] { 0f, 0f, 0f, 0.0f };//r,g,b,a
 
     public SpStickerFilter(Context context) {
         this(context, VERTEX_SHADER,
@@ -56,6 +58,7 @@ public class SpStickerFilter extends GLImageFilter {
             aspectRatio = GLES30.glGetUniformLocation(mProgramHandle, "aspectRatio");
             s = GLES30.glGetUniformLocation(mProgramHandle, "s");
             c = GLES30.glGetUniformLocation(mProgramHandle, "c");
+            blendColor = GLES30.glGetUniformLocation(mProgramHandle, "blendColor");
         }
     }
 
@@ -70,6 +73,10 @@ public class SpStickerFilter extends GLImageFilter {
         }
         if (mCenter != null) {
             GLES30.glUniform2f(center, mCenter.wRatio, mCenter.hRatio);
+        }
+        if (mBlendColor != null) {
+            GLES30.glUniform4f(blendColor, mBlendColor[0], mBlendColor[1], mBlendColor[2],
+                mBlendColor[3]);
         }
         GLES30.glUniform1f(aspectRatio, mAspectRatio);
         GLES30.glUniform1f(alpha, mAlpha);
@@ -95,6 +102,10 @@ public class SpStickerFilter extends GLImageFilter {
         mTheta = degree;
         mS = (float) Math.sin(mTheta);
         mC = (float) Math.cos(mTheta);
+    }
+
+    public void setBlendColor(float[] blendColor) {
+        mBlendColor = blendColor;
     }
 
     public static class Vec2 {

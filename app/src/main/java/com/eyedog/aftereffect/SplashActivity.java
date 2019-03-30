@@ -20,7 +20,7 @@ public class SplashActivity extends BaseThreadHandlerActivity {
         mMonitorView = findViewById(R.id.monitor_view);
         mTvJni = findViewById(R.id.tv_jni);
         obtainThreadMessage(MSG_THREAD_JNI_TEST).sendToTarget();
-        postUIDelay(enterRunnable, 1500);
+        postUIDelay(enterRunnable, 500);
     }
 
     @Override
