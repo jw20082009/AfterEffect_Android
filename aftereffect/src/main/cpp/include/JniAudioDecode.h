@@ -13,7 +13,7 @@ extern "C"
 JNI(jint, initAudioDecoder)(JNIEnv
                             *env,
                             jclass type, jstring audioInput, jstring audioOutput);
-JNI(jint, getDecodeProgress)(JNIEnv *env, jclass type);
+JNI(jlong, getDecodeProgress)(JNIEnv *env, jclass type);
 JNI(jint, releaseDecoder)(JNIEnv *env, jclass type);
 }
 #endif //AFTEREFFECT_ANDROID_JNIAUDIODECODE_H

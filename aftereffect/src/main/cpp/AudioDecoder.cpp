@@ -5,14 +5,15 @@
 #include "AudioDecoder.h"
 
 AudioDecoder::AudioDecoder(const char *srcFile, const char *outFile) {
-    this->srcpath = srcFile;
-    this->outpath = outFile;
+    srcpath = srcFile;
+    outpath = outFile;
     startDecode();
 }
 
 AudioDecoder::~AudioDecoder() {
-    LOGI("~AudioDecoder %s,%s", this->srcpath, this->outpath);
-    this->progress = -1;
+    LOGI("~AudioDecoder %s,%s", srcpath, outpath);
+    setProgress(-1);
+    setTotalProgress(-1);
 }
 
 int AudioDecoder::openInputFile(int *audioStream, const char *filename) {
@@ -58,7 +59,7 @@ int AudioDecoder::startDecode() {
         LOGI("open_input_file1 failed %s", srcpath);
         goto FINISH;
     }
-    totalProgress = ifmt_ctx->streams[streamIndex]->duration;
+    setTotalProgress(ifmt_ctx->streams[streamIndex]->duration);
     outFile = fopen(this->outpath, "wb+");
     av_init_packet(&packet);
     while (true) {
@@ -76,10 +77,10 @@ int AudioDecoder::startDecode() {
         }
         while ((ret = avcodec_receive_frame(decode_ctx, pFrame)) >= 0) {
             //write to file
-            fwrite(pFrame->data[0], 1, pFrame->linesize[0], outFile);
-            progress = pFrame->pts;
-            LOGI("fwrite %d,progress: %lld,total: %lld", pFrame->linesize[0], progress,
-                 totalProgress);
+            fwrite(pFrame->data[1], 1, pFrame->linesize[0], outFile);
+            setProgress(pFrame->pts);
+            LOGI("fwrite %d,progress: %lld,total: %lld", pFrame->linesize[0], getProgress(),
+                 getTotalProgress());
         }
     }
     FINISH:
@@ -88,10 +89,4 @@ int AudioDecoder::startDecode() {
         av_frame_free(&pFrame);
     }
     return ret;
-}
-
-int AudioDecoder::getProgress() {
-    this->progress++;
-    LOGI("getProgress %d", this->progress);
-    return this->progress;
 }

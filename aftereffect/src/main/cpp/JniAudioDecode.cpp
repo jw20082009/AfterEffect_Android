@@ -17,7 +17,7 @@ JNI(jint, initAudioDecoder)(JNIEnv
     return 0;
 }
 
-JNI(jint, getDecodeProgress)(JNIEnv *env, jclass type) {
+JNI(jlong, getDecodeProgress)(JNIEnv *env, jclass type) {
     if (decoder != NULL) {
         return decoder->getProgress();
     } else {

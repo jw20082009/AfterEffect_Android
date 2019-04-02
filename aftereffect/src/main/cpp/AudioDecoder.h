@@ -1,20 +1,22 @@
 //
 // Created by jw200 on 2019/4/1.
 //
+
+
+#ifndef AFTEREFFECT_ANDROID_AUDIODECODER_H
+#define AFTEREFFECT_ANDROID_AUDIODECODER_H
+
 #include "Log.h"
 #include <iostream>
+#include "BaseProgresser.h"
 
 extern "C" {
 #include "libavformat/avformat.h"
 }
 using namespace std;
-#ifndef AFTEREFFECT_ANDROID_AUDIODECODER_H
-#define AFTEREFFECT_ANDROID_AUDIODECODER_H
 
-class AudioDecoder {
+class AudioDecoder : public BaseProgresser {
 private:
-    int64_t progress = -1;
-    int64_t totalProgress = -1;
     AVFormatContext *ifmt_ctx = NULL;
     AVCodecContext *decode_ctx;
     int64_t out_ch_layout = AV_CH_LAYOUT_STEREO;//双声道
@@ -28,8 +30,6 @@ private:
 
 public:
     AudioDecoder(const char *srcFile, const char *outFile);
-
-    int getProgress();
 
     ~AudioDecoder();
 };
