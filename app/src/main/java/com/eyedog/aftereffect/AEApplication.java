@@ -9,6 +9,10 @@ public class AEApplication extends Application {
 
     public static AEApplication mContext;
 
+    static {
+        System.loadLibrary("native-lib");
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();

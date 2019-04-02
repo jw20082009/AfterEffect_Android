@@ -40,7 +40,7 @@ public class SplashActivity extends BaseThreadHandlerActivity {
         super.handleThreadMessage(message);
         switch (message.what) {
             case MSG_THREAD_JNI_TEST:
-                String jniStr = VideoClipJni.sayHello(TAG);
+                String jniStr = JniTest.sayHello(TAG);
                 Message uiMsg = obtainUIMessage(MSG_UI_SHOW_JNI_TEST);
                 uiMsg.obj = jniStr;
                 uiMsg.sendToTarget();

@@ -1,0 +1,14 @@
+//
+// Created by jw200 on 2019/4/1.
+//
+
+#ifndef AFTEREFFECT_ANDROID_AUDIOMIXER_H
+#define AFTEREFFECT_ANDROID_AUDIOMIXER_H
+
+
+class AudioMixer {
+
+};
+
+
+#endif //AFTEREFFECT_ANDROID_AUDIOMIXER_H

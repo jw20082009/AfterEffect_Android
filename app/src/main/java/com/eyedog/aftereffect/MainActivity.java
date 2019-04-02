@@ -4,9 +4,12 @@ package com.eyedog.aftereffect;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import com.eyedog.aftereffect.audio.AudioDecoder;
 
 public class MainActivity extends AppCompatActivity {
+    private final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,9 +33,24 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                VideoClipJni.audioMix("/sdcard/audio/1553863788514.aac", "",
-                    "/sdcard/audio/audioOut.aac");
+                //JniTest.audioMix("/sdcard/audio/1553863788514.aac", "",
+                //    "/sdcard/audio/audioOut.aac");
             }
         }).start();
+    }
+
+    public void audioDecode(View view) {
+        AudioDecoder.initAudioDecoder("/sdcard/audio/music.mp3",
+            "/sdcard/audio/audioOut.pcm");
+    }
+
+    public void audioProgress(View view) {
+        int progress = AudioDecoder.getDecodeProgress();
+        Log.i(TAG, "audioProgress " + progress);
+    }
+
+    public void audioRelease(View view) {
+        int releaseResult = AudioDecoder.releaseDecoder();
+        Log.i(TAG, "audioRlease " + releaseResult);
     }
 }

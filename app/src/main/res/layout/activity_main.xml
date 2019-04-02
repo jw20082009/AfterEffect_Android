@@ -45,6 +45,35 @@
                 android:onClick="audioMix"
                 android:text="start audioMix"
                 />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                >
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="audioDecode"
+                    android:text="start audioDecode"
+                    />
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="audioProgress"
+                    android:text="get audioDecode Progress"
+                    />
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="audioRelease"
+                    android:text="release audioDecode"
+                    />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 

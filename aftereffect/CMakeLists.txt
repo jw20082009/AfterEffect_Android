@@ -13,6 +13,7 @@ set(fdk_aac_dir libs/fdk-aac-0.1.5)
 include_directories(
         libs/include
         src/main/cpp/include
+        src/main/cpp
         ${fdk_aac_dir}/libAACdec/include
         ${fdk_aac_dir}/libAACenc/include
         ${fdk_aac_dir}/libPCMutils/include
