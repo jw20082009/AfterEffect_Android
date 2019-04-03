@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import com.eyedog.aftereffect.audio.AudioDecoder;
+import com.eyedog.aftereffect.audio.AudioMixer;
+import javax.security.auth.login.LoginException;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
@@ -35,8 +37,20 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 //JniTest.audioMix("/sdcard/audio/1553863788514.aac", "",
                 //    "/sdcard/audio/audioOut.aac");
+                AudioMixer.initAudioMixer("/sdcard/audio/music.mp3",
+                    "/sdcard/audio/test2.aac", "/sdcard/audio/audioOut.aac");
             }
         }).start();
+    }
+
+    public void audioMixProgress(View view) {
+        long progress = AudioMixer.getProgress();
+        Log.i(TAG, "audioMixProgress " + progress);
+    }
+
+    public void audioMixRelease(View view) {
+        int result = AudioMixer.releaseMixer();
+        Log.i(TAG, "audioMixRelease " + result);
     }
 
     public void audioDecode(View view) {
