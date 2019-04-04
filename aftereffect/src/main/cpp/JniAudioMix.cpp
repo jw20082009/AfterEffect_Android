@@ -2,9 +2,9 @@
 // Created by jw200 on 2019/4/2.
 //
 #include "JniAudioMix.h"
-#include "AudioMixer.h"
+#include "AudioFFMixer.h"
 
-static AudioMixer *audioMixer = NULL;
+static AudioFFMixer *audioMixer = NULL;
 
 JNI(jint, initAudioMixer)(JNIEnv
                           *env,
@@ -16,7 +16,7 @@ JNI(jint, initAudioMixer)(JNIEnv
     if (audioMixer != NULL) {
         delete (audioMixer);
     }
-    audioMixer = new AudioMixer(_audioInput, _audioInput2, _audioOutput);
+    audioMixer = new AudioFFMixer(_audioInput, _audioInput2, _audioOutput);
     env->ReleaseStringUTFChars(audioInput, _audioInput);
     env->ReleaseStringUTFChars(audioInput2, _audioInput2);
     env->ReleaseStringUTFChars(audioOutput, _audioOutput);
