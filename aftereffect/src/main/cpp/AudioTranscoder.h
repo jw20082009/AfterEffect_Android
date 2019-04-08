@@ -15,8 +15,8 @@ class AudioTranscoder {
 
 private:
     SwrContext *pSwrCtx = NULL;
-    int64_t out_ch_layout = AV_CH_LAYOUT_STEREO;
-    enum AVSampleFormat out_sample_fmt = AV_SAMPLE_FMT_S16;
+    int64_t out_ch_layout = av_get_default_channel_layout(2);
+    enum AVSampleFormat out_sample_fmt = AV_SAMPLE_FMT_S16P;
     int out_sample_rate = 44100;
 
     void setup_array(uint8_t *out[SWR_CH_MAX], AVFrame *inframe, int format, int samples);

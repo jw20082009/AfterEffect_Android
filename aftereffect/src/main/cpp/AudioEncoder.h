@@ -15,6 +15,7 @@ private:
     AACENC_InfoStruct info = {0};
     FILE *out;
     int16_t *convert_buf;
+    int channels = -1;
 
     int audioEncoding2(uint8_t *data, int in_buffer_size);
 

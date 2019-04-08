@@ -10,6 +10,7 @@
 #include "JniBase.h"
 #include "BaseProgresser.h"
 #include "AudioTranscoder.h"
+#include "AudioEncoder.h"
 
 extern "C" {
 #include "libavcodec/avcodec.h"
@@ -43,8 +44,8 @@ extern "C" {
 class AudioFFMixer : public BaseProgresser {
 
 private:
-    AVFormatContext *output_format_context = NULL;
-    AVCodecContext *output_codec_context = NULL;
+//    AVFormatContext *output_format_context = NULL;
+//    AVCodecContext *output_codec_context = NULL;
 
     AVFormatContext *input_format_context_0 = NULL;
     AVCodecContext *input_codec_context_0 = NULL;
@@ -89,6 +90,8 @@ private:
     int write_output_file_header(AVFormatContext *output_format_context);
 
     int write_output_file_trailer(AVFormatContext *output_format_context);
+
+    int needResample(AVCodecContext *codecContext);
 
 public:
     AudioFFMixer(const char *audio1, const char *audio2, const char *audioOut);

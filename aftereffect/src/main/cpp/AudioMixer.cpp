@@ -190,7 +190,7 @@ int AudioMixer::startMix() {
     av_register_all();
     avfilter_register_all();
     audioEncoder = new AudioEncoder();
-    audioEncoder->audioEncodeInit(audioOut, av_get_channel_layout_nb_channels(out_ch_layout), 30000,
+    audioEncoder->audioEncodeInit(audioOut, av_get_channel_layout_nb_channels(out_ch_layout), 80000,
                                   out_sample_rate);
     if ((ret = openInputFile1(&streamIndex1, audio1)) < 0) {
         LOGI("open inputfile1 failed %s", audio1);

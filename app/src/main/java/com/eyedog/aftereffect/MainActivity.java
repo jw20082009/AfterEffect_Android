@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 //JniTest.audioMix("/sdcard/audio/1553863788514.aac", "",
                 //    "/sdcard/audio/audioOut.aac");
-                AudioMixer.initAudioMixer("/sdcard/audio/music.mp3", "/sdcard/audio/test2.aac"
-                    , "/sdcard/audio/audioOut.wav");
+                AudioMixer.initAudioMixer("/sdcard/audio/input.aac", "/sdcard/audio/music.mp3"
+                    , "/sdcard/audio/audioOut.aac");
             }
         }).start();
     }

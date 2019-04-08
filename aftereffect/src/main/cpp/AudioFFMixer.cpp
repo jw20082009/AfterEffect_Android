@@ -180,13 +180,25 @@ int AudioFFMixer::encode_audio_frame(AVFrame *frame, AVFormatContext *output_for
     return 0;
 }
 
+int AudioFFMixer::needResample(AVCodecContext *codecContext) {
+    if (codecContext) {
+        return codecContext->channel_layout == AV_CH_LAYOUT_MONO;
+    }
+    return 0;
+}
+
 int AudioFFMixer::process_all() {
     int ret = 0;
     int data_present = 0;
     int finished = 0;
     int nb_inputs = 2;
-    AudioTranscoder *transcoder1 = NULL;
-    AudioTranscoder *transcoder2 = NULL;
+//    AudioTranscoder *transcoder1 = NULL;
+//    AudioTranscoder *transcoder2 = NULL;
+
+    AudioEncoder *audioEncoder = new AudioEncoder();
+    audioEncoder->audioEncodeInit(audioOut, out_channel_num,
+                                  40000 * out_channel_num,
+                                  44100);
     AVFormatContext *input_format_contexts[2];
     AVCodecContext *input_codec_contexts[2];
     AVFrame *transFrame = av_frame_alloc();
@@ -194,16 +206,16 @@ int AudioFFMixer::process_all() {
     input_format_contexts[1] = input_format_context_1;
     input_codec_contexts[0] = input_codec_context_0;
     input_codec_contexts[1] = input_codec_context_1;
-    if (input_codec_context_0->channel_layout == AV_CH_LAYOUT_MONO) {
-        transcoder1 = new AudioTranscoder();
-        transcoder1->initSwr(input_codec_context_0->channel_layout,
-                             input_codec_context_0->sample_fmt, input_codec_context_0->sample_rate);
-    }
-    if (input_codec_context_1->channel_layout == AV_CH_LAYOUT_MONO) {
-        transcoder2 = new AudioTranscoder();
-        transcoder2->initSwr(input_codec_context_1->channel_layout,
-                             input_codec_context_1->sample_fmt, input_codec_context_1->sample_rate);
-    }
+//    if (needResample(input_codec_context_0)) {
+//    transcoder1 = new AudioTranscoder();
+//    transcoder1->initSwr(AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_FLTP,
+//                         input_codec_context_0->sample_rate);
+//    }
+//    if (needResample(input_codec_context_1)) {
+//        transcoder2 = new AudioTranscoder();
+//        transcoder2->initSwr(input_codec_context_1->channel_layout,
+//                             input_codec_context_1->sample_fmt, input_codec_context_1->sample_rate);
+//    }
     AVFilterContext *buffer_contexts[2];
     buffer_contexts[0] = src0;
     buffer_contexts[1] = src1;
@@ -263,16 +275,20 @@ int AudioFFMixer::process_all() {
                 }
             } else if (data_present) { /** If there is decoded data, convert and store it */
                 /* push the audio data from decoded frame into the filtergraph */
-                transFrame->data[0] = NULL;
-                if (i == 0 && transcoder1 != NULL) {
-                    transcoder1->transSample(frame, transFrame, input_codec_context_0->sample_fmt);
-                } else if (i == 1 && transcoder2 != NULL) {
-                    transcoder2->transSample(frame, transFrame, input_codec_context_1->sample_fmt);
-                }
-                if (transFrame == NULL || transFrame->data[0] == NULL) {
-                    transFrame = frame;
-                }
-                ret = av_buffersrc_write_frame(buffer_contexts[i], transFrame);
+//                transFrame->data[0] = NULL;
+//                if (i == 0 && transcoder1 != NULL) {
+//                    transcoder1->transSample(frame, transFrame, input_codec_context_0->sample_fmt);
+//                } else if (i == 1 && transcoder2 != NULL) {
+//                    transcoder2->transSample(frame, transFrame, input_codec_context_1->sample_fmt);
+//                }
+//                if (transFrame == NULL || transFrame->data[0] == NULL) {
+//                LOGI("av_buffersrc_write_frame frame %d", i);
+                ret = av_buffersrc_write_frame(buffer_contexts[i], frame);
+//                } else {
+//                    LOGI("av_buffersrc_write_frame transFrame %d", i);
+//                    ret = av_buffersrc_write_frame(buffer_contexts[i], transFrame);
+//                }
+
                 if (ret < 0) {
                     LOGE("Error while feeding the audio filtergraph\n");
                     goto end;
@@ -315,13 +331,21 @@ int AudioFFMixer::process_all() {
 //                     (double) filt_frame->nb_samples / output_codec_context->sample_rate,
 //                     (double) (total_out_samples += filt_frame->nb_samples) /
 //                     output_codec_context->sample_rate);
-//                transFrame->data[0] = NULL;
-//                transSample(filt_frame, transFrame, output_codec_context->sample_fmt);
-//                if (transFrame == NULL || transFrame->data[0] == NULL) {
-//                    transFrame = filt_frame;
+//                av_frame_free(&transFrame);
+//                transFrame = av_frame_alloc();
+//                int transResult = transcoder1->transSample(filt_frame, transFrame,
+//                                                           AV_SAMPLE_FMT_FLTP);
+//                if (transResult < 0) {
+                ret = audioEncoder->audioEncoding(filt_frame->data[0], filt_frame->linesize[0]);
+//                    ret = encode_audio_frame(filt_frame, output_format_context,
+//                                             output_codec_context,
+//                                             &data_present);
+//                } else {
+//                    ret = audioEncoder->audioEncoding(transFrame->data[0], transFrame->linesize[0]);
+////                    ret = encode_audio_frame(transFrame, output_format_context,
+////                                             output_codec_context,
+////                                             &data_present);
 //                }
-                ret = encode_audio_frame(filt_frame, output_format_context, output_codec_context,
-                                         &data_present);
                 if (ret < 0)
                     goto end;
                 av_frame_unref(filt_frame);
@@ -340,16 +364,21 @@ int AudioFFMixer::process_all() {
     end:
     av_frame_unref(transFrame);
     av_frame_free(&transFrame);
-    if (transcoder1 != NULL) {
-        transcoder1->deInitSwr();
-        delete (transcoder1);
-        transcoder1 = NULL;
+    if (audioEncoder != NULL) {
+        audioEncoder->audioEncodeEnd();
+        delete (audioEncoder);
+        audioEncoder = NULL;
     }
-    if (transcoder2 != NULL) {
-        transcoder2->deInitSwr();
-        delete (transcoder2);
-        transcoder2 = NULL;
-    }
+//    if (transcoder1 != NULL) {
+//        transcoder1->deInitSwr();
+//        delete (transcoder1);
+//        transcoder1 = NULL;
+//    }
+//    if (transcoder2 != NULL) {
+//        transcoder2->deInitSwr();
+//        delete (transcoder2);
+//        transcoder2 = NULL;
+//    }
 //    deInitSwr();
 //    av_frame_unref(transFrame);
     //    avcodec_close(input_codec_context);
@@ -426,6 +455,9 @@ int AudioFFMixer::init_filter_graph(AVFilterGraph **graph, AVFilterContext **src
     AVFilter *mix_filter;
     AVFilterContext *abuffersink_ctx;
     AVFilter *abuffersink;
+    uint64_t channel_layout0, channel_layout1;
+    enum AVSampleFormat sample_fmt0, sample_fmt1;
+    int sampleRate0, sampleRate1;
 
     char args[512];
 
@@ -452,12 +484,32 @@ int AudioFFMixer::init_filter_graph(AVFilterGraph **graph, AVFilterContext **src
     if (!input_codec_context_0->channel_layout)
         input_codec_context_0->channel_layout = av_get_default_channel_layout(
                 input_codec_context_0->channels);
+//    if (needResample(input_codec_context_0)) {
+//        channel_layout0 = AV_CH_LAYOUT_STEREO;
+//        sample_fmt0 = AV_SAMPLE_FMT_S16;
+//        sampleRate0 = 44100;
+//    } else {
+    channel_layout0 = input_codec_context_0->channel_layout;
+    sample_fmt0 = input_codec_context_0->sample_fmt;
+    sampleRate0 = input_codec_context_0->sample_rate;
+//    }
+
+    if (!input_codec_context_1->channel_layout)
+        input_codec_context_1->channel_layout = av_get_default_channel_layout(
+                input_codec_context_1->channels);
+//    if (needResample(input_codec_context_1)) {
+//        channel_layout1 = AV_CH_LAYOUT_STEREO;
+//        sample_fmt1 = AV_SAMPLE_FMT_S16;
+//        sampleRate1 = 44100;
+//    } else {
+    channel_layout1 = input_codec_context_1->channel_layout;
+    sample_fmt1 = input_codec_context_1->sample_fmt;
+    sampleRate1 = input_codec_context_1->sample_rate;
+//    }
+
     snprintf(args, sizeof(args),
              "sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64,
-             input_codec_context_0->sample_rate,
-             av_get_sample_fmt_name(input_codec_context_0->sample_fmt),
-             input_codec_context_0->channel_layout);
-
+             sampleRate0, av_get_sample_fmt_name(sample_fmt0), channel_layout0);
 
     err = avfilter_graph_create_filter(&abuffer0_ctx, abuffer0, "src0",
                                        args, NULL, filter_graph);
@@ -477,14 +529,10 @@ int AudioFFMixer::init_filter_graph(AVFilterGraph **graph, AVFilterContext **src
     }
 
     /* buffer audio source: the decoded frames from the decoder will be inserted here. */
-    if (!input_codec_context_1->channel_layout)
-        input_codec_context_1->channel_layout = av_get_default_channel_layout(
-                input_codec_context_1->channels);
+
     snprintf(args, sizeof(args),
-             "sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64,
-             input_codec_context_1->sample_rate,
-             av_get_sample_fmt_name(input_codec_context_1->sample_fmt),
-             input_codec_context_1->channel_layout);
+             "sample_rate=%d:sample_fmt=%s:channel_layout=0x%" PRIx64, sampleRate1,
+             av_get_sample_fmt_name(sample_fmt1), channel_layout1);
 
 
     err = avfilter_graph_create_filter(&abuffer1_ctx, abuffer1, "src1",
@@ -629,24 +677,24 @@ int AudioFFMixer::startMix() {
 
     LOGI("Output file : %s\n", outputFile);
 
-    err = open_output_file(outputFile, input_codec_context_0, &output_format_context,
-                           &output_codec_context);
+//    err = open_output_file(outputFile, input_codec_context_0, &output_format_context,
+//                           &output_codec_context);
+//
+//    LOGI("open output file err : %d\n", err);
+//    av_dump_format(output_format_context, 0, outputFile, 1);
 
-    LOGI("open output file err : %d\n", err);
-    av_dump_format(output_format_context, 0, outputFile, 1);
 
-
-    if (write_output_file_header(output_format_context) < 0) {
-        LOGE("Error while writing header outputfile\n");
-        return 1;
-    }
+//    if (write_output_file_header(output_format_context) < 0) {
+//        LOGE("Error while writing header outputfile\n");
+//        return 1;
+//    }
 
     process_all();
 
-    if (write_output_file_trailer(output_format_context) < 0) {
-        LOGE("Error while writing header outputfile\n");
-        return 1;
-    }
+//    if (write_output_file_trailer(output_format_context) < 0) {
+//        LOGE("Error while writing header outputfile\n");
+//        return 1;
+//    }
 
     LOGI("FINISHED\n");
 
