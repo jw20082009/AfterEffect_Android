@@ -2,10 +2,13 @@
 package com.eyedog.aftereffect;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import com.eyedog.aftereffect.audio.AudioDecoder;
 import com.eyedog.aftereffect.audio.AudioMixer;
 import javax.security.auth.login.LoginException;
@@ -13,10 +16,24 @@ import javax.security.auth.login.LoginException;
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
 
+    private TextView textTestLand;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        textTestLand = findViewById(R.id.tv_test);
+        textTestLand.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int ori = getResources().getConfiguration().orientation;
+                if (ori == Configuration.ORIENTATION_PORTRAIT) {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//强制为竖屏
+                } else if (ori == Configuration.ORIENTATION_LANDSCAPE) {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);//强制为竖屏
+                }
+            }
+        });
     }
 
     public void startJni(View view) {
@@ -66,5 +83,17 @@ public class MainActivity extends AppCompatActivity {
     public void audioRelease(View view) {
         int releaseResult = AudioDecoder.releaseDecoder();
         Log.i(TAG, "audioRlease " + releaseResult);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "onDestroy main");
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        Log.i(TAG, "finish main");
     }
 }
