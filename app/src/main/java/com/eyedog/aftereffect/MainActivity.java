@@ -4,25 +4,29 @@ package com.eyedog.aftereffect;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+
 import com.eyedog.aftereffect.audio.AudioDecoder;
 import com.eyedog.aftereffect.audio.AudioMixer;
-import javax.security.auth.login.LoginException;
+import com.eyedog.widgets.VideoProgressView;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
 
     private TextView textTestLand;
 
+    protected VideoProgressView mVideoProgressView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textTestLand = findViewById(R.id.tv_test);
+        mVideoProgressView = findViewById(R.id.videoprogressview);
+        mVideoProgressView.setDataSource("/sdcard/DCIM/sp_video_1538722774050.mp4",5000,8);
         textTestLand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mVideoProgressView.onDestory();
         Log.i(TAG, "onDestroy main");
     }
 

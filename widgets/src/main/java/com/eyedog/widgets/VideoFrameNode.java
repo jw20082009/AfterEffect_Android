@@ -1,4 +1,4 @@
-package com.huya.svkit.libcamera.widgets;
+package com.eyedog.widgets;
 
 import android.graphics.Bitmap;
 
