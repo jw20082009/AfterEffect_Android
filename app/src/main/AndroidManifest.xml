@@ -4,11 +4,11 @@
 
     <uses-feature
         android:glEsVersion="0x00020000"
-        android:required="true"/>
+        android:required="true" />
 
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".AEApplication"
@@ -18,20 +18,23 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".GLImageActivity"></activity>
-        <activity android:name=".GLPlayerActivity"></activity>
-        <activity android:name=".SplashActivity">
+        <activity android:name=".StickerActivity">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".display.DisplayActivity"></activity>
+        <activity android:name=".GLImageActivity" />
+        <activity android:name=".GLPlayerActivity" />
+        <activity android:name=".SplashActivity">
+
+        </activity>
+        <activity android:name=".display.DisplayActivity" />
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait"></activity>
-        <activity android:name=".JniActivity"></activity>
+            android:screenOrientation="portrait" />
+        <activity android:name=".JniActivity" />
     </application>
 
 </manifest>
