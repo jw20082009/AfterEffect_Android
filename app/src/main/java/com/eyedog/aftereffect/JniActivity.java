@@ -4,6 +4,7 @@ import android.os.Message;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
+
 import com.eyedog.basic.BaseThreadHandlerActivity;
 
 public class JniActivity extends BaseThreadHandlerActivity {
@@ -45,6 +46,6 @@ public class JniActivity extends BaseThreadHandlerActivity {
     }
 
     public void muxVideo(View view) {
-
+        sendEmptyThreadMessage(MSG_THREAD_JNI_TEST);
     }
 }

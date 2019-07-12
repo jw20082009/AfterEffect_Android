@@ -12,21 +12,21 @@ import android.widget.TextView;
 
 import com.eyedog.aftereffect.audio.AudioDecoder;
 import com.eyedog.aftereffect.audio.AudioMixer;
-import com.eyedog.widgets.VideoProgressView;
+import com.eyedog.aftereffect.camera.GLPlayerActivity;
 
 public class MainActivity extends AppCompatActivity {
     private final String TAG = "MainActivity";
 
     private TextView textTestLand;
 
-    protected VideoProgressView mVideoProgressView;
+//    protected VideoProgressView mVideoProgressView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textTestLand = findViewById(R.id.tv_test);
-        mVideoProgressView = findViewById(R.id.videoprogressview);
-        mVideoProgressView.setDataSource("/sdcard/DCIM/sp_video_1538722774050.mp4",5000,8);
+//        mVideoProgressView = findViewById(R.id.videoprogressview);
+//        mVideoProgressView.setDataSource("/sdcard/DCIM/sp_video_1538722774050.mp4",5000,8);
         textTestLand.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -41,10 +41,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startJni(View view) {
-
+        startActivity(new Intent(this,JniActivity.class));
     }
 
-    public void startGLlayer(View view) {
+    public void startGLplayer(View view) {
         startActivity(new Intent(this, GLPlayerActivity.class));
     }
 
@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mVideoProgressView.onDestory();
+//        mVideoProgressView.onDestory();
         Log.i(TAG, "onDestroy main");
     }
 

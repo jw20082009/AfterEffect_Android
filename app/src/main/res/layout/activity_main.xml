@@ -24,7 +24,7 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:onClick="startGLlayer"
+                android:onClick="startGLplayer"
                 android:text="GL Camera Player" />
 
             <Button
@@ -93,10 +93,7 @@
                     android:text="release audioMix" />
             </LinearLayout>
 
-            <com.eyedog.widgets.VideoProgressView
-                android:id="@+id/videoprogressview"
-                android:layout_width="match_parent"
-                android:layout_height="60dp" />
+
         </LinearLayout>
     </ScrollView>
 
